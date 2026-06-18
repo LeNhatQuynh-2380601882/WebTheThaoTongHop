@@ -1,0 +1,119 @@
+@model TamThaiTuSport.Models.Domain.Category
+@{
+    ViewData["Title"] = "Chỉnh sửa danh mục";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Chỉnh sửa danh mục</h1>
+        <p class="dash-subtitle">ID: <strong>#@Model.Id</strong> – @Model.Name</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="admin-btn secondary">
+            <i class='bx bx-arrow-back'></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;max-width:700px;">
+    <div class="dash-card-header">
+        <h2 class="dash-card-title"><i class='bx bx-edit'></i> Thông tin danh mục</h2>
+    </div>
+    <div style="padding:1.5rem;">
+        <form asp-area="Admin" asp-controller="Categories" asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+                <div class="admin-form-group" style="grid-column:1/-1;">
+                    <label class="admin-form-label">Tên danh mục <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="Name" class="admin-form-input" placeholder="VD: Giày chạy bộ"
+                           required maxlength="150" value="@Model.Name" id="catName" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Slug (URL)</label>
+                    <input type="text" name="Slug" class="admin-form-input"
+                           maxlength="200" value="@Model.Slug" id="catSlug" />
+                    <small class="text-muted">Dùng trong URL: /san-pham?category=<strong>slug</strong></small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Icon (emoji)</label>
+                    <input type="text" name="IconClass" class="admin-form-input" placeholder="VD: 👟"
+                           maxlength="60" value="@Model.IconClass" id="iconPreview" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Màu chủ đạo</label>
+                    <div style="display:flex;gap:0.75rem;align-items:center;">
+                        <input type="color" name="Color" value="@(Model.Color ?? "#f97316")" id="colorPicker"
+                               style="width:50px;height:42px;border:none;border-radius:8px;cursor:pointer;background:none;" />
+                        <input type="text" id="colorText" class="admin-form-input" value="@(Model.Color ?? "#f97316")"
+                               style="flex:1;" oninput="document.getElementById('colorPicker').value=this.value" />
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Thứ tự hiển thị</label>
+                    <input type="number" name="SortOrder" class="admin-form-input" value="@Model.SortOrder" min="0" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">URL ảnh danh mục</label>
+                    <input type="url" name="ImageUrl" class="admin-form-input" placeholder="https://..."
+                           maxlength="500" value="@Model.ImageUrl" />
+                </div>
+
+                <div class="admin-form-group" style="grid-column:1/-1;">
+                    <label class="admin-form-label">Trạng thái</label>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")
+                               id="isActive" style="width:18px;height:18px;accent-color:#f97316;" />
+                        <label for="isActive" style="cursor:pointer;font-size:0.9rem;color:var(--text-secondary)">
+                            Hiển thị danh mục trên website
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+                <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Xem trước</div>
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <div id="previewIcon" style="width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:@(Model.Color ?? "#f97316")22;">
+                        @(Model.IconClass ?? "📦")
+                    </div>
+                    <div>
+                        <div id="previewName" style="font-weight:700;font-size:1.1rem;color:var(--text-primary);">@Model.Name</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);">/san-pham?category=@Model.Slug</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:1rem;">
+                <button type="submit" class="admin-btn primary">
+                    <i class='bx bx-save'></i> Lưu thay đổi
+                </button>
+                <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="admin-btn secondary">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('catName').addEventListener('input', function () {
+        document.getElementById('previewName').textContent = this.value;
+    });
+    document.getElementById('iconPreview').addEventListener('input', function () {
+        document.getElementById('previewIcon').textContent = this.value || '📦';
+    });
+    document.getElementById('colorPicker').addEventListener('input', function () {
+        document.getElementById('colorText').value = this.value;
+        document.getElementById('previewIcon').style.background = this.value + '22';
+    });
+</script>
+}

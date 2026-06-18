@@ -1,0 +1,142 @@
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var orderId = ViewBag.OrderId;
+    var orderTotal = ViewBag.OrderTotal;
+    var pointsEarned = ViewBag.PointsEarned ?? 0;
+}
+
+<style>
+.success-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+}
+.success-card {
+    background: var(--gradient-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 3rem;
+    text-align: center;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    animation: successPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@@keyframes successPop {
+    from { opacity:0; transform: scale(0.8); }
+    to { opacity:1; transform: scale(1); }
+}
+.success-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    animation: bounce 1s ease 0.3s both;
+}
+@@keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+.success-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+.success-subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.7; }
+.order-info-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    text-align: left;
+}
+.order-info-item {}
+.order-info-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; }
+.order-info-value { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.points-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(234,179,8,0.1), rgba(249,115,22,0.1));
+    border: 1px solid rgba(234,179,8,0.3);
+    color: #fbbf24;
+    padding: 0.6rem 1.2rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+</style>
+
+<div class="success-page">
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h1 class="success-title">Đặt hàng thành công!</h1>
+        <p class="success-subtitle">
+            Cảm ơn bạn đã mua hàng tại <strong>Tam Thái Tử Sport</strong>!<br>
+            Đơn hàng của bạn đang được xử lý. Chúng tôi sẽ liên hệ sớm nhất để xác nhận.
+        </p>
+
+        <div class="order-info-box">
+            <div class="order-info-item">
+                <div class="order-info-label">Mã đơn hàng</div>
+                <div class="order-info-value">#@orderId</div>
+            </div>
+            <div class="order-info-item">
+                <div class="order-info-label">Tổng thanh toán</div>
+                <div class="order-info-value" style="background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+                    @orderTotal₫
+                </div>
+            </div>
+            <div class="order-info-item">
+                <div class="order-info-label">Trạng thái</div>
+                <div class="order-info-value" style="color:#f59e0b">⏳ Chờ duyệt</div>
+            </div>
+            <div class="order-info-item">
+                <div class="order-info-label">Thời gian</div>
+                <div class="order-info-value">@DateTime.Now.ToString("HH:mm dd/MM")</div>
+            </div>
+        </div>
+
+        @if ((int)pointsEarned > 0)
+        {
+            <div class="points-badge">
+                ⭐ Bạn vừa nhận được <strong>@pointsEarned điểm</strong> thưởng!
+            </div>
+        }
+
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+            <a asp-controller="Profile" asp-action="Orders" class="btn btn-primary">
+                <i class='bx bx-package'></i> Xem đơn hàng
+            </a>
+            <a href="/san-pham" class="btn btn-secondary">
+                <i class='bx bx-store'></i> Tiếp tục mua sắm
+            </a>
+        </div>
+
+        <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text-muted)">
+            Cần hỗ trợ? Gọi ngay <strong style="color:var(--primary)">1800 1234</strong> (miễn phí, 8:00–22:00)
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Clear cart after successful order
+    document.addEventListener('DOMContentLoaded', () => {
+        Cart.clear();
+        updateCartBadge();
+    });
+</script>
+}

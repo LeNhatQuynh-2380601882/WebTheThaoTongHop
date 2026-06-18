@@ -1,0 +1,157 @@
+@model List<TamThaiTuSport.Models.Domain.Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    int total = ViewBag.Total ?? 0;
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 20;
+    var categories = ViewBag.Categories as List<TamThaiTuSport.Models.Domain.Category> ?? new();
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Quản lý sản phẩm</h1>
+        <p class="dash-subtitle">Tổng cộng <strong>@total</strong> sản phẩm</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Products" asp-action="Create" class="admin-btn primary">
+            <i class='bx bx-plus'></i> Thêm sản phẩm
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="dash-filter-bar">
+    <form method="get" class="dash-filter-form">
+        <div class="dash-search-wrap">
+            <i class='bx bx-search'></i>
+            <input type="text" name="q" value="@ViewBag.SearchQuery" class="dash-search-input" placeholder="Tìm tên, thương hiệu..." />
+        </div>
+        <select name="categoryId" class="admin-select" style="width:200px;">
+            <option value="">Tất cả danh mục</option>
+            @foreach (var cat in categories)
+            {
+                if (ViewBag.CategoryId?.ToString() == cat.Id.ToString())
+                {
+                    <option value="@cat.Id" selected>@cat.Name</option>
+                }
+                else
+                {
+                    <option value="@cat.Id">@cat.Name</option>
+                }
+            }
+        </select>
+        <button type="submit" class="admin-btn primary">Tìm kiếm</button>
+        <a href="?" class="admin-btn secondary">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;">
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th style="width:60px">#</th>
+                    <th>Sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Giá bán</th>
+                    <th>Giá KM</th>
+                    <th>Tồn kho</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td class="text-muted">@p.Id</td>
+                        <td>
+                            <div class="product-table-cell">
+                                @if (!string.IsNullOrEmpty(p.Image))
+                                {
+                                    <img src="/uploads/products/@p.Image" alt="@p.Name" class="product-table-thumb" />
+                                }
+                                else
+                                {
+                                    <div class="product-table-thumb-placeholder">📦</div>
+                                }
+                                <div>
+                                    <div class="font-medium">@p.Name</div>
+                                    <small class="text-muted">@p.Brand • @p.ViewsCount views</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">@(p.Category?.Name ?? "-")</td>
+                        <td>@p.Price.ToString("N0")₫</td>
+                        <td>
+                            @if (p.DiscountPrice.HasValue)
+                            {
+                                <span class="text-success">@p.DiscountPrice.Value.ToString("N0")₫</span>
+                            }
+                            else { <span class="text-muted">-</span> }
+                        </td>
+                        <td>
+                            @if (p.Stock == 0)
+                            {
+                                <span class="admin-badge danger">Hết hàng</span>
+                            }
+                            else if (p.Stock < 10)
+                            {
+                                <span class="admin-badge warning">@p.Stock (thấp)</span>
+                            }
+                            else
+                            {
+                                <span class="admin-badge success">@p.Stock</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="admin-badge @(p.IsActive ? "success" : "danger")">
+                                @(p.IsActive ? "Đang bán" : "Ẩn")
+                            </span>
+                            @if (p.IsNew)
+                            {
+                                <span class="admin-badge info" style="margin-left:4px">Mới</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-area="Admin" asp-controller="Products" asp-action="Edit" asp-route-id="@p.Id"
+                                   class="admin-btn-sm primary" title="Chỉnh sửa">
+                                    <i class='bx bx-edit'></i>
+                                </a>
+                                <a href="/san-pham/@p.Slug" target="_blank" class="admin-btn-sm" title="Xem trang">
+                                    <i class='bx bx-link-external'></i>
+                                </a>
+                                <form asp-area="Admin" asp-controller="Products" asp-action="Delete" method="post" style="display:inline"
+                                      onsubmit="return confirm('Ẩn sản phẩm này?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <button type="submit" class="admin-btn-sm danger" title="Ẩn">
+                                        <i class='bx bx-hide'></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8" class="dash-empty">Không tìm thấy sản phẩm nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (total > pageSize)
+    {
+        int totalPages = (int)Math.Ceiling((double)total / pageSize);
+        <div class="dash-pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a href="?page=@i&q=@ViewBag.SearchQuery&categoryId=@ViewBag.CategoryId"
+                   class="dash-page-btn @(i == page ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+</div>

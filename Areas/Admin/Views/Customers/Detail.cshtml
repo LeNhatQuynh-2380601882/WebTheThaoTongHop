@@ -1,0 +1,194 @@
+@model TamThaiTuSport.Models.Domain.AppUser
+@{
+    ViewData["Title"] = "Chi tiết khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var orders = ViewBag.Orders as List<TamThaiTuSport.Models.Domain.Order> ?? new();
+    var roles = ViewBag.Roles as IList<string> ?? new List<string>();
+    decimal totalSpent = ViewBag.TotalSpent ?? 0;
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Chi tiết khách hàng</h1>
+        <p class="dash-subtitle">@(Model.FullName ?? Model.Email)</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Customers" asp-action="Index" class="admin-btn secondary">
+            <i class='bx bx-arrow-back'></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;margin-top:1rem;align-items:start;">
+    <!-- LEFT: Profile Card -->
+    <div>
+        <div class="dash-card">
+            <div style="padding:2rem;text-align:center;border-bottom:1px solid var(--admin-border);">
+                <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:white;margin:0 auto 1rem;">
+                    @((Model.FullName ?? Model.Email ?? "?").Substring(0, 1).ToUpper())
+                </div>
+                <div style="font-size:1.2rem;font-weight:700;color:var(--admin-text);">@(Model.FullName ?? "(Chưa có tên)")</div>
+                <div style="font-size:0.85rem;color:var(--admin-text-muted);margin-top:0.25rem;">@Model.Email</div>
+                <div style="margin-top:0.75rem;">
+                    @foreach (var role in roles)
+                    {
+                        <span class="admin-badge @(role == "Admin" ? "danger" : role == "NhanVien" ? "warning" : "info")" style="margin:0.2rem;">
+                            @role
+                        </span>
+                    }
+                </div>
+                <div style="margin-top:0.75rem;">
+                    <span class="admin-badge @(Model.IsActive ? "success" : "danger")">
+                        @(Model.IsActive ? "✅ Đang hoạt động" : "🔒 Bị khóa")
+                    </span>
+                </div>
+            </div>
+
+            <div style="padding:1.25rem;">
+                <div style="display:flex;flex-direction:column;gap:0.85rem;">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Số điện thoại</div>
+                        <div style="font-weight:600;">@(Model.PhoneNumber ?? "Chưa cập nhật")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Ngày sinh</div>
+                        <div style="font-weight:600;">@(Model.DateOfBirth?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Ngày đăng ký</div>
+                        <div style="font-weight:600;">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Đăng nhập cuối</div>
+                        <div style="font-weight:600;">@(Model.LastLogin?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--admin-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Điểm thưởng</div>
+                        <div style="font-weight:700;font-size:1.2rem;color:#fbbf24;">⭐ @Model.LoyaltyPointsTotal điểm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="dash-card" style="margin-top:1rem;">
+            <div style="padding:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div style="text-align:center;padding:1rem;background:rgba(249,115,22,0.05);border-radius:12px;">
+                    <div style="font-size:1.8rem;font-weight:900;background:linear-gradient(135deg,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">@orders.Count</div>
+                    <div style="font-size:0.78rem;color:var(--admin-text-muted);">Tổng đơn hàng</div>
+                </div>
+                <div style="text-align:center;padding:1rem;background:rgba(34,197,94,0.05);border-radius:12px;">
+                    <div style="font-size:1rem;font-weight:700;color:#4ade80;">@totalSpent.ToString("N0")₫</div>
+                    <div style="font-size:0.78rem;color:var(--admin-text-muted);">Đã chi tiêu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Set Role -->
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="dash-card" style="margin-top:1rem;">
+                <div class="dash-card-header"><h2 class="dash-card-title"><i class='bx bx-shield'></i> Phân quyền</h2></div>
+                <div style="padding:1.25rem;">
+                    <form asp-area="Admin" asp-controller="Customers" asp-action="SetRole" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@Model.Id" />
+                        <select name="role" class="admin-select" style="width:100%;margin-bottom:0.75rem;">
+                            @if (roles.Contains("KhachHang")) {
+                                <option value="KhachHang" selected>Khách hàng</option>
+                            } else {
+                                <option value="KhachHang">Khách hàng</option>
+                            }
+                            @if (roles.Contains("NhanVien")) {
+                                <option value="NhanVien" selected>Nhân viên</option>
+                            } else {
+                                <option value="NhanVien">Nhân viên</option>
+                            }
+                            @if (roles.Contains("Admin")) {
+                                <option value="Admin" selected>Admin</option>
+                            } else {
+                                <option value="Admin">Admin</option>
+                            }
+                        </select>
+                        <button type="submit" class="admin-btn primary" style="width:100%;" onclick="return confirm('Xác nhận thay đổi quyền?')">
+                            <i class='bx bx-check'></i> Cập nhật quyền
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <!-- Toggle Active -->
+        <div style="margin-top:1rem;">
+            <form asp-area="Admin" asp-controller="Customers" asp-action="Toggle" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="admin-btn @(Model.IsActive ? "danger" : "success")" style="width:100%;"
+                        onclick="return confirm('@(Model.IsActive ? "Khóa tài khoản này?" : "Mở khóa tài khoản?")')">
+                    <i class='bx @(Model.IsActive ? "bx-lock" : "bx-lock-open")'></i>
+                    @(Model.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT: Orders -->
+    <div>
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h2 class="dash-card-title"><i class='bx bx-package'></i> Lịch sử đơn hàng (@orders.Count)</h2>
+            </div>
+            <div class="dash-table-wrap">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Sản phẩm</th>
+                            <th>Địa chỉ</th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày đặt</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in orders)
+                        {
+                            var (sc, st) = o.Status switch
+                            {
+                                TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => ("warning", "Chờ duyệt"),
+                                TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => ("info", "Xác nhận"),
+                                TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => ("primary", "Đang giao"),
+                                TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => ("success", "Đã giao"),
+                                TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => ("danger", "Đã hủy"),
+                                _ => ("secondary", "Khác")
+                            };
+                            <tr>
+                                <td><strong>#@o.Id</strong></td>
+                                <td class="text-muted">@o.OrderDetails.Count sản phẩm</td>
+                                <td class="text-truncate" style="max-width:130px;" title="@o.ShippingAddress">@o.ShippingAddress</td>
+                                <td><strong>@o.FinalTotal.ToString("N0")₫</strong></td>
+                                <td>
+                                    <span class="admin-badge @(o.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "success" : "warning")">
+                                        @(o.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "Đã TT" : "Chưa TT")
+                                    </span>
+                                </td>
+                                <td><span class="admin-badge @sc">@st</span></td>
+                                <td class="text-muted">@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@o.Id"
+                                       class="admin-btn-sm">Chi tiết</a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!orders.Any())
+                        {
+                            <tr><td colspan="8" class="dash-empty">Khách hàng chưa có đơn hàng nào</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

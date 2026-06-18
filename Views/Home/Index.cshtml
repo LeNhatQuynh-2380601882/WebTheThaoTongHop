@@ -1,0 +1,394 @@
+@model TamThaiTuSport.Models.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+}
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero" aria-label="Hero banner">
+    <div class="hero-bg">
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-gradient-orb orb-1" aria-hidden="true"></div>
+        <div class="hero-gradient-orb orb-2" aria-hidden="true"></div>
+        <div class="hero-gradient-orb orb-3" aria-hidden="true"></div>
+    </div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-left">
+                <div class="hero-tag">
+                    <span class="hero-tag-dot" aria-hidden="true"></span>
+                    🏆 Cửa hàng thể thao #1 Việt Nam
+                </div>
+                <h1 class="hero-title">
+                    Thể Thao<br>
+                    <span class="hero-title-gradient">Đỉnh Cao</span><br>
+                    Chính Hãng
+                </h1>
+                <p class="hero-desc">
+                    Khám phá hơn <strong>@Model.Stats.TotalProducts+ sản phẩm</strong> thể thao chính hãng từ Nike, Adidas,
+                    Yonex, Puma và nhiều thương hiệu hàng đầu thế giới. Giá tốt — Giao nhanh — Đổi trả dễ dàng.
+                </p>
+                <div class="hero-actions">
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-primary btn-lg" id="heroShopBtn">
+                        <i class='bx bx-store'></i> Mua sắm ngay
+                    </a>
+                    <a href="/khuyen-mai" class="btn btn-secondary btn-lg" id="heroSaleBtn">
+                        🔥 Xem khuyến mãi
+                    </a>
+                </div>
+                <div class="hero-stats" role="list">
+                    <div class="hero-stat" role="listitem">
+                        <div class="hero-stat-value" data-count="@Model.Stats.TotalProducts">0</div>
+                        <div class="hero-stat-label">Sản phẩm</div>
+                    </div>
+                    <div class="hero-stat" role="listitem">
+                        <div class="hero-stat-value" data-count="@Model.Stats.TotalOrders">0</div>
+                        <div class="hero-stat-label">Đơn hàng</div>
+                    </div>
+                    <div class="hero-stat" role="listitem">
+                        <div class="hero-stat-value" data-count="@Model.Stats.TotalCustomers">0</div>
+                        <div class="hero-stat-label">Khách hàng</div>
+                    </div>
+                    <div class="hero-stat" role="listitem">
+                        <div class="hero-stat-value">@Model.Stats.YearsOfExperience+</div>
+                        <div class="hero-stat-label">Năm kinh nghiệm</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-right" aria-hidden="true">
+                <div class="hero-product-card">
+                    <div class="hero-product-image">
+                        <span>👟</span>
+                        <div class="hero-product-badge"><span class="badge badge-new">⚡ HOT</span></div>
+                    </div>
+                    @if (Model.FeaturedProducts.Any())
+                    {
+                        var top = Model.FeaturedProducts.First();
+                        <div class="product-card-brand">@(top.Brand ?? "Sport")</div>
+                        <div class="product-card-name" style="font-size:1rem;margin-bottom:0.85rem">@top.Name</div>
+                        <div class="product-card-price">
+                            <span class="price-current">@top.FinalPrice.ToString("N0")₫</span>
+                            @if (top.DiscountPercent > 0)
+                            {
+                                <span class="price-original">@top.Price.ToString("N0")₫</span>
+                                <span class="price-discount">-@top.DiscountPercent%</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="product-card-brand">Nike</div>
+                        <div class="product-card-name" style="font-size:1rem;margin-bottom:0.85rem">Nike Air Zoom Pegasus 40</div>
+                        <div class="product-card-price">
+                            <span class="price-current">2.490.000₫</span>
+                            <span class="price-original">2.890.000₫</span>
+                            <span class="price-discount">-14%</span>
+                        </div>
+                    }
+                    <button class="btn-add-cart" style="width:100%;justify-content:center" onclick="Toast.success('Chào mừng đến Tam Thái Tử Sport! 🏆')">
+                        <i class='bx bx-cart-add'></i> Thêm vào giỏ
+                    </button>
+                    <div class="hero-floating-badges">
+                        <div class="floating-badge"><span>🚚</span> Giao hàng miễn phí</div>
+                        <div class="floating-badge"><span>✅</span> Hàng chính hãng 100%</div>
+                        <div class="floating-badge"><span>↩️</span> Đổi trả 30 ngày</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ BRAND MARQUEE ═══════════ -->
+<div class="marquee-section" aria-label="Thương hiệu đối tác">
+    <div class="marquee-track" aria-hidden="true">
+        @{
+            var brands = new[] {
+                ("🟠","Nike"),("⚫","Adidas"),("🟡","Puma"),("🔵","Yonex"),
+                ("🔴","Victor"),("⚪","Asics"),("🟤","New Balance"),("🟢","Under Armour"),
+                ("🔵","Speedo"),("⚫","Spalding"),("🟠","Li-Ning"),("🔴","Mizuno")
+            };
+            var all = brands.Concat(brands).ToArray();
+        }
+        @foreach (var (emoji, name) in all)
+        {
+            <div class="brand-item"><span>@emoji</span>@name</div>
+            <div class="marquee-dot" aria-hidden="true"></div>
+        }
+    </div>
+</div>
+
+<!-- ═══════════ POLICY STRIP ═══════════ -->
+<section class="policy-strip" aria-label="Chính sách dịch vụ">
+    <div class="container">
+        <div class="policy-grid" role="list">
+            <div class="policy-item" role="listitem"><span class="policy-icon">🚚</span><div><div class="policy-title">Miễn phí vận chuyển</div><div class="policy-desc">Đơn hàng từ 500.000₫</div></div></div>
+            <div class="policy-item" role="listitem"><span class="policy-icon">↩️</span><div><div class="policy-title">Đổi trả 30 ngày</div><div class="policy-desc">Miễn phí, không cần lý do</div></div></div>
+            <div class="policy-item" role="listitem"><span class="policy-icon">✅</span><div><div class="policy-title">Hàng chính hãng 100%</div><div class="policy-desc">Cam kết từ nhà sản xuất</div></div></div>
+            <div class="policy-item" role="listitem"><span class="policy-icon">💬</span><div><div class="policy-title">Hỗ trợ 24/7</div><div class="policy-desc">Hotline: 1800 1234</div></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ CATEGORIES ═══════════ -->
+<section class="section" aria-labelledby="categories-title">
+    <div class="container">
+        <div class="section-header" data-animate>
+            <div class="section-tag">📂 Danh mục</div>
+            <h2 class="section-title" id="categories-title">Khám Phá <span>Danh Mục</span></h2>
+            <p class="section-desc">Từ giày chạy bộ, bóng đá, cầu lông đến gym & fitness — tất cả tại một nơi</p>
+        </div>
+        @if (Model.Categories.Any())
+        {
+            var colorPairs = new[] {
+                ("#f97316","#1a0d00"),("#3b82f6","#000d1a"),("#22c55e","#001a0a"),
+                ("#ef4444","#1a0000"),("#a855f7","#0f001a"),("#06b6d4","#00141a"),
+                ("#eab308","#1a1400"),("#64748b","#0d1117")
+            };
+            int ci = 0;
+            <div class="categories-showcase" role="list">
+                @foreach (var cat in Model.Categories.Take(8))
+                {
+                    var (accent, bg) = colorPairs[ci % colorPairs.Length];
+                    ci++;
+                    <a href="/san-pham?category=@cat.Slug"
+                       class="cat-showcase-item"
+                       role="listitem"
+                       style="background: radial-gradient(ellipse at 50% 20%, @bg 0%, var(--bg-dark) 100%);"
+                       data-animate data-delay="@(ci)">
+                        <div class="cat-showcase-bg" style="color:@accent; opacity:0.3;">@cat.IconClass</div>
+                        <div class="cat-showcase-overlay"></div>
+                        <div class="cat-showcase-content">
+                            <div class="cat-showcase-name">@cat.Name</div>
+                            <div class="cat-showcase-count">Xem sản phẩm</div>
+                            <div class="cat-showcase-arrow">Xem ngay <i class='bx bx-right-arrow-alt'></i></div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ═══════════ FEATURED PRODUCTS ═══════════ -->
+<section class="section" style="padding-top:0" aria-labelledby="featured-title">
+    <div class="container">
+        <div class="section-header" data-animate>
+            <div class="section-tag">⭐ Bán chạy</div>
+            <h2 class="section-title" id="featured-title">Sản Phẩm <span>Nổi Bật</span></h2>
+            <p class="section-desc">Những sản phẩm được yêu thích và đánh giá cao nhất tháng này</p>
+        </div>
+        @if (Model.FeaturedProducts.Any())
+        {
+            <div class="products-grid" role="list">
+                @foreach (var (p, i) in Model.FeaturedProducts.Select((p, i) => (p, i)))
+                {
+                    <article class="product-card" role="listitem" data-animate data-delay="@((i % 4) + 1)">
+                        <a href="/san-pham/@p.Slug" class="product-card-image" aria-label="Xem @p.Name">
+                            @if (!string.IsNullOrEmpty(p.Image))
+                            {
+                                <img src="/uploads/products/@p.Image" alt="@p.Name" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span style="font-size:4rem;display:flex;align-items:center;justify-content:center;height:100%">👟</span>
+                            }
+                            <div class="product-card-badges">
+                                @if (p.IsNew) { <span class="badge badge-new">Mới</span> }
+                                @if (p.DiscountPercent > 0) { <span class="badge badge-sale">-@p.DiscountPercent%</span> }
+                                @if (p.Stock < 10 && p.Stock > 0) { <span class="badge" style="background:#f59e0b;color:white">Sắp hết</span> }
+                            </div>
+                        </a>
+                        <div class="product-card-actions">
+                            <button class="product-card-action-btn"
+                                    data-wishlist-id="@p.Id"
+                                    onclick="Wishlist.toggle('@p.Id','@p.Name')"
+                                    aria-pressed="false"
+                                    aria-label="Yêu thích">
+                                <i class='bx bx-heart'></i>
+                            </button>
+                            <a href="/san-pham/@p.Slug" class="product-card-action-btn" aria-label="Xem chi tiết">
+                                <i class='bx bx-show'></i>
+                            </a>
+                        </div>
+                        <div class="product-card-body">
+                            @if (!string.IsNullOrEmpty(p.Brand)) { <div class="product-card-brand">@p.Brand</div> }
+                            <h3 class="product-card-name"><a href="/san-pham/@p.Slug">@p.Name</a></h3>
+                            <div class="product-card-rating">
+                                <div class="stars" aria-label="5 sao">★★★★★</div>
+                                <span>(24)</span>
+                            </div>
+                            <div class="product-card-price">
+                                <span class="price-current">@p.FinalPrice.ToString("N0")₫</span>
+                                @if (p.DiscountPercent > 0)
+                                {
+                                    <span class="price-original">@p.Price.ToString("N0")₫</span>
+                                    <span class="price-discount">-@p.DiscountPercent%</span>
+                                }
+                            </div>
+                            <div class="product-card-footer">
+                                <button class="btn-add-cart"
+                                        data-id="@p.Id"
+                                        data-name="@p.Name"
+                                        data-price="@p.FinalPrice"
+                                        data-image="@(p.Image ?? "")"
+                                        onclick="addToCart(this)"
+                                        aria-label="Thêm @p.Name vào giỏ">
+                                    <i class='bx bx-cart-add'></i> Thêm giỏ
+                                </button>
+                                <span class="tag">@p.Stock còn</span>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+            <div style="text-align:center;margin-top:2.5rem" data-animate>
+                <a asp-controller="Product" asp-action="Index" class="btn btn-secondary btn-lg" id="viewAllBtn">
+                    Xem tất cả sản phẩm <i class='bx bx-right-arrow-alt'></i>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ═══════════ PROMO BANNER ═══════════ -->
+<section class="section" style="padding-top:0" aria-label="Khuyến mãi đặc biệt">
+    <div class="container">
+        <div class="promo-banner" data-animate>
+            <div>
+                <div class="promo-tag">⚡ Ưu đãi đặc biệt</div>
+                <h2 class="promo-title">Giảm Ngay 10%<br>Cho Đơn Đầu Tiên!</h2>
+                <p class="promo-desc">Đăng ký thành viên và nhập mã để nhận ưu đãi ngay. Áp dụng cho tất cả sản phẩm.</p>
+                <a asp-controller="Auth" asp-action="Register" class="btn promo-cta btn-lg" id="promoRegisterBtn">
+                    🎁 Đăng ký ngay — Miễn phí
+                </a>
+            </div>
+            <div class="promo-code-box"
+                 onclick="navigator.clipboard?.writeText('WELCOME10').then(()=>Toast.success('Đã sao chép mã WELCOME10!'))"
+                 role="button" tabindex="0"
+                 aria-label="Nhấn để sao chép mã WELCOME10">
+                <div class="promo-code-label">Mã giảm giá</div>
+                <div class="promo-code-value">WELCOME10</div>
+                <div class="promo-code-hint">📋 Nhấn để sao chép</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ NEW ARRIVALS ═══════════ -->
+@if (Model.NewProducts.Any())
+{
+    <section class="section" style="padding-top:0" aria-labelledby="new-title">
+        <div class="container">
+            <div class="section-header" data-animate>
+                <div class="section-tag">🆕 Hàng mới về</div>
+                <h2 class="section-title" id="new-title">Mới <span>Nhất</span></h2>
+                <p class="section-desc">Những sản phẩm mới nhất vừa cập nhật kho hàng</p>
+            </div>
+            <div class="products-grid" role="list">
+                @foreach (var (p, i) in Model.NewProducts.Select((p, i) => (p, i)))
+                {
+                    <article class="product-card" role="listitem" data-animate data-delay="@(i + 1)">
+                        <a href="/san-pham/@p.Slug" class="product-card-image">
+                            @if (!string.IsNullOrEmpty(p.Image))
+                            {
+                                <img src="/uploads/products/@p.Image" alt="@p.Name" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span style="font-size:4rem;display:flex;align-items:center;justify-content:center;height:100%">🆕</span>
+                            }
+                            <div class="product-card-badges"><span class="badge badge-new">Mới</span></div>
+                        </a>
+                        <div class="product-card-actions">
+                            <button class="product-card-action-btn" data-wishlist-id="@p.Id" onclick="Wishlist.toggle('@p.Id','@p.Name')" aria-pressed="false" aria-label="Yêu thích"><i class='bx bx-heart'></i></button>
+                            <a href="/san-pham/@p.Slug" class="product-card-action-btn" aria-label="Xem chi tiết"><i class='bx bx-show'></i></a>
+                        </div>
+                        <div class="product-card-body">
+                            @if (!string.IsNullOrEmpty(p.Brand)) { <div class="product-card-brand">@p.Brand</div> }
+                            <h3 class="product-card-name"><a href="/san-pham/@p.Slug">@p.Name</a></h3>
+                            <div class="product-card-price">
+                                <span class="price-current">@p.FinalPrice.ToString("N0")₫</span>
+                                @if (p.DiscountPercent > 0) { <span class="price-original">@p.Price.ToString("N0")₫</span> }
+                            </div>
+                            <div class="product-card-footer">
+                                <button class="btn-add-cart" data-id="@p.Id" data-name="@p.Name" data-price="@p.FinalPrice" data-image="@(p.Image??"")" onclick="addToCart(this)" aria-label="Thêm vào giỏ">
+                                    <i class='bx bx-cart-add'></i> Thêm giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- ═══════════ STATS ═══════════ -->
+<section class="stats-section" aria-labelledby="stats-title">
+    <div class="container">
+        <h2 id="stats-title" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Thống kê cửa hàng</h2>
+        <div class="stats-grid" role="list">
+            <div class="stat-card" role="listitem" data-animate>
+                <span class="stat-icon">🏆</span>
+                <div class="stat-value"><span data-count="@Model.Stats.TotalProducts">0</span><span class="stat-suffix">+</span></div>
+                <div class="stat-label">Sản phẩm chính hãng</div>
+            </div>
+            <div class="stat-card" role="listitem" data-animate data-delay="2">
+                <span class="stat-icon">😊</span>
+                <div class="stat-value"><span data-count="@Model.Stats.TotalCustomers">0</span><span class="stat-suffix">+</span></div>
+                <div class="stat-label">Khách hàng hài lòng</div>
+            </div>
+            <div class="stat-card" role="listitem" data-animate data-delay="3">
+                <span class="stat-icon">📦</span>
+                <div class="stat-value"><span data-count="@Model.Stats.TotalOrders">0</span><span class="stat-suffix">+</span></div>
+                <div class="stat-label">Đơn hàng thành công</div>
+            </div>
+            <div class="stat-card" role="listitem" data-animate data-delay="4">
+                <span class="stat-icon">⭐</span>
+                <div class="stat-value">4.9<span class="stat-suffix">/5</span></div>
+                <div class="stat-label">Đánh giá trung bình</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ TESTIMONIALS ═══════════ -->
+@if (Model.Testimonials.Any())
+{
+    <section class="section" aria-labelledby="testimonials-title">
+        <div class="container">
+            <div class="section-header" data-animate>
+                <div class="section-tag">💬 Đánh giá</div>
+                <h2 class="section-title" id="testimonials-title">Khách Hàng <span>Nói Gì?</span></h2>
+                <p class="section-desc">Hàng ngàn khách hàng hài lòng với trải nghiệm mua sắm tại Tam Thái Tử Sport</p>
+            </div>
+            <div class="testimonials-grid" role="list">
+                @foreach (var (t, i) in Model.Testimonials.Select((t, i) => (t, i)))
+                {
+                    <div class="testimonial-card" role="listitem" data-animate data-delay="@((i % 2) + 1)">
+                        <div class="testimonial-header">
+                            <div class="testimonial-avatar">@t.Avatar</div>
+                            <div>
+                                <div class="testimonial-name">@t.Name</div>
+                                <div class="testimonial-location">📍 @t.Location</div>
+                            </div>
+                            <div class="testimonial-rating" aria-label="@t.Rating sao">
+                                @for (int s = 0; s < t.Rating; s++) { <span>★</span> }
+                                @for (int s = t.Rating; s < 5; s++) { <span style="opacity:.3">★</span> }
+                            </div>
+                        </div>
+                        <p class="testimonial-quote">"@t.Comment"</p>
+                        <div class="testimonial-product">
+                            <i class='bx bx-purchase-tag'></i> Đã mua: @t.Product
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}

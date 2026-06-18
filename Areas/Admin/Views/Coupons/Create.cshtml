@@ -1,0 +1,181 @@
+@model TamThaiTuSport.Models.Domain.Coupon
+@{
+    ViewData["Title"] = "Tạo mã giảm giá mới";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Tạo mã giảm giá mới</h1>
+        <p class="dash-subtitle">Tạo mã khuyến mãi cho khách hàng</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Coupons" asp-action="Index" class="admin-btn secondary">
+            <i class='bx bx-arrow-back'></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:1.5rem;margin-top:1rem;align-items:start;">
+    <!-- Form -->
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h2 class="dash-card-title"><i class='bx bx-discount'></i> Thông tin mã giảm giá</h2>
+        </div>
+        <div style="padding:1.5rem;">
+            <form asp-area="Admin" asp-controller="Coupons" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+
+                    <div class="admin-form-group" style="grid-column:1/-1;">
+                        <label class="admin-form-label">Mã giảm giá <span style="color:#ef4444">*</span></label>
+                        <div style="position:relative;">
+                            <input type="text" name="Code" class="admin-form-input" required maxlength="50"
+                                   value="@Model.Code" placeholder="VD: SUMMER20"
+                                   style="text-transform:uppercase;font-family:monospace;font-size:1.1rem;letter-spacing:0.1em;"
+                                   oninput="this.value=this.value.toUpperCase();updatePreview()" id="codeInput" />
+                            <button type="button" onclick="generateCode()" title="Tạo ngẫu nhiên"
+                                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(249,115,22,0.15);border:none;border-radius:6px;padding:0.3rem 0.6rem;cursor:pointer;color:#f97316;font-size:0.8rem;">
+                                🎲 Random
+                            </button>
+                        </div>
+                        <small class="text-muted">Viết hoa, không dấu, không khoảng trắng</small>
+                    </div>
+
+                    <div class="admin-form-group" style="grid-column:1/-1;">
+                        <label class="admin-form-label">Mô tả</label>
+                        <input type="text" name="Description" class="admin-form-input" maxlength="200"
+                               value="@Model.Description" placeholder="VD: Giảm 20% cho đơn hàng mùa hè" />
+                    </div>
+
+                    <div class="admin-form-group" style="grid-column:1/-1;">
+                        <label class="admin-form-label">Loại giảm giá <span style="color:#ef4444">*</span></label>
+                        <div style="display:flex;gap:1rem;">
+                            <label id="labelPercent" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:0.85rem 1.5rem;background:rgba(249,115,22,0.05);border:2px solid #f97316;border-radius:10px;flex:1;transition:all 0.2s;">
+                                <input type="radio" name="IsPercent" value="true" checked
+                                       onchange="toggleType()" style="accent-color:#f97316;" />
+                                <span><strong>% Phần trăm</strong><br><small class="text-muted">Giảm theo % giá trị đơn</small></span>
+                            </label>
+                            <label id="labelFixed" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:0.85rem 1.5rem;background:rgba(249,115,22,0.05);border:2px solid var(--admin-border);border-radius:10px;flex:1;transition:all 0.2s;">
+                                <input type="radio" name="IsPercent" value="false"
+                                       onchange="toggleType()" style="accent-color:#f97316;" />
+                                <span><strong>₫ Số tiền cố định</strong><br><small class="text-muted">Giảm trực tiếp số tiền</small></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Giá trị giảm <span style="color:#ef4444">*</span></label>
+                        <div style="position:relative;">
+                            <input type="number" name="DiscountValue" class="admin-form-input" required
+                                   value="@Model.DiscountValue" min="0" step="0.01"
+                                   oninput="updatePreview()" id="discountValueInput" />
+                            <span id="discountUnit" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--admin-text-muted);font-weight:600;">%</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group" id="maxDiscountGroup">
+                        <label class="admin-form-label">Giảm tối đa (₫)</label>
+                        <input type="number" name="MaxDiscount" class="admin-form-input"
+                               value="@Model.MaxDiscount" min="0" step="1000" placeholder="Không giới hạn" />
+                        <small class="text-muted">Áp dụng khi giảm theo %</small>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Đơn hàng tối thiểu (₫)</label>
+                        <input type="number" name="MinOrderAmount" id="minInput" class="admin-form-input"
+                               value="@Model.MinOrderAmount" min="0" step="10000" placeholder="Không giới hạn"
+                               oninput="updatePreview()" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Số lượt dùng tối đa</label>
+                        <input type="number" name="MaxUsage" class="admin-form-input"
+                               value="@Model.MaxUsage" min="1" placeholder="Không giới hạn" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Ngày hết hạn</label>
+                        <input type="datetime-local" name="ExpiresAt" class="admin-form-input"
+                               value="@(Model.ExpiresAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                        <small class="text-muted">Để trống = không hết hạn</small>
+                    </div>
+
+                    <div class="admin-form-group" style="grid-column:1/-1;">
+                        <label class="admin-form-label">Trạng thái</label>
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <input type="checkbox" name="IsActive" value="true" checked
+                                   id="isActive" style="width:18px;height:18px;accent-color:#f97316;" />
+                            <label for="isActive" style="cursor:pointer;font-size:0.9rem;color:var(--admin-text-secondary)">
+                                Kích hoạt mã giảm giá
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                    <button type="submit" class="admin-btn primary">
+                        <i class='bx bx-save'></i> Tạo mã
+                    </button>
+                    <a asp-area="Admin" asp-controller="Coupons" asp-action="Index" class="admin-btn secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div>
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h2 class="dash-card-title"><i class='bx bx-show'></i> Xem trước</h2>
+            </div>
+            <div style="padding:1.5rem;">
+                <div style="background:linear-gradient(135deg,rgba(249,115,22,0.15),rgba(239,68,68,0.1));border:2px dashed rgba(249,115,22,0.4);border-radius:16px;padding:1.5rem;text-align:center;">
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--admin-text-muted);margin-bottom:0.75rem;">🎫 Mã giảm giá</div>
+                    <div id="previewCode" style="font-family:monospace;font-size:1.8rem;font-weight:900;color:#f97316;letter-spacing:0.1em;margin-bottom:0.5rem;">SALE10</div>
+                    <div id="previewValue" style="font-size:1.1rem;font-weight:700;color:var(--admin-text);margin-bottom:0.5rem;">Giảm 10%</div>
+                    <div id="previewMin" style="font-size:0.8rem;color:var(--admin-text-muted);">Không giới hạn đơn tối thiểu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function generateCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 8; i++) result += chars[Math.floor(Math.random() * chars.length)];
+        document.getElementById('codeInput').value = result;
+        updatePreview();
+    }
+
+    function toggleType() {
+        const isPercent = document.querySelector('input[name="IsPercent"]:checked').value === 'true';
+        document.getElementById('labelPercent').style.borderColor = isPercent ? '#f97316' : 'var(--admin-border)';
+        document.getElementById('labelFixed').style.borderColor = !isPercent ? '#f97316' : 'var(--admin-border)';
+        document.getElementById('discountUnit').textContent = isPercent ? '%' : '₫';
+        document.getElementById('maxDiscountGroup').style.opacity = isPercent ? '1' : '0.4';
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const code = document.getElementById('codeInput').value || 'SALE10';
+        const isPercent = document.querySelector('input[name="IsPercent"]:checked').value === 'true';
+        const value = parseFloat(document.getElementById('discountValueInput').value || 0);
+        const min = parseFloat(document.getElementById('minInput').value || 0);
+
+        document.getElementById('previewCode').textContent = code;
+        document.getElementById('previewValue').textContent = isPercent
+            ? `Giảm ${value}%`
+            : `Giảm ${value.toLocaleString('vi-VN')}₫`;
+        document.getElementById('previewMin').textContent = min > 0
+            ? `Đơn từ ${min.toLocaleString('vi-VN')}₫`
+            : 'Không giới hạn đơn tối thiểu';
+    }
+
+    updatePreview();
+</script>
+}

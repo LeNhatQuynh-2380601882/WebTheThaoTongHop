@@ -1,0 +1,117 @@
+## Ignore Visual Studio temporary files, build results, and
+## user-specific settings.
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/xamarin)
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 2015/2017/2019/2022 cache directory
+.vs/
+# Generated files
+Generated\ Files/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+/*.VisualState.xml
+
+# DNX
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# StyleCop
+StyleCopReport.xml
+
+# Files for Microsoft Fakes
+FakesAssemblies/
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# JustCode
+.JustCode
+
+# TeamCity
+_TeamCity*
+
+# MM App Bundle
+*.appbundle
+
+# Navigation database temporary files
+*.xdoc
+
+# Microsoft Azure Build output
+csx/
+*.build.csdef
+
+# Microsoft Azure Emulator
+ecf/
+rcf/
+
+# Azure Cloud Service Pipeline Files
+*-clouddn/
+
+# Checkstyle-idea
+.checkstyle
+
+# Simple-Git
+.simple-git
+
+# Syncfusion licensing
+SyncfusionLicense.txt
+
+# Local History for Visual Studio Code
+.history/
+
+# TypeScript Map files
+*.map
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-tarball.log
+
+# Directory for virtual environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Rider
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Local log files
+*.log
+momo_debug.log

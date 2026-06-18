@@ -1,0 +1,100 @@
+@model List<TamThaiTuSport.Models.Domain.Category>
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var productCounts = ViewBag.ProductCounts as Dictionary<int, int> ?? new();
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Quản lý danh mục</h1>
+        <p class="dash-subtitle">Tổng cộng <strong>@Model.Count</strong> danh mục</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Categories" asp-action="Create" class="admin-btn primary">
+            <i class='bx bx-plus'></i> Thêm danh mục
+        </a>
+    </div>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;">
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th style="width:60px">#</th>
+                    <th>Icon</th>
+                    <th>Tên danh mục</th>
+                    <th>Slug</th>
+                    <th>Màu</th>
+                    <th>Thứ tự</th>
+                    <th>Sản phẩm</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cat in Model)
+                {
+                    var count = productCounts.TryGetValue(cat.Id, out var c) ? c : 0;
+                    <tr>
+                        <td class="text-muted">@cat.Id</td>
+                        <td>
+                            <div style="width:40px;height:40px;border-radius:10px;background:@(cat.Color ?? "#f97316")22;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
+                                @(cat.IconClass ?? "📦")
+                            </div>
+                        </td>
+                        <td>
+                            <div class="font-medium">@cat.Name</div>
+                            <small class="text-muted">Tạo @cat.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</small>
+                        </td>
+                        <td class="text-muted"><code>@cat.Slug</code></td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(cat.Color))
+                            {
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <div style="width:20px;height:20px;border-radius:4px;background:@cat.Color;border:1px solid rgba(255,255,255,0.1)"></div>
+                                    <small class="text-muted">@cat.Color</small>
+                                </div>
+                            }
+                            else { <span class="text-muted">–</span> }
+                        </td>
+                        <td><span class="admin-badge info">@cat.SortOrder</span></td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Products" asp-action="Index"
+                               asp-route-categoryId="@cat.Id" class="admin-badge success" style="text-decoration:none;">
+                                @count sản phẩm
+                            </a>
+                        </td>
+                        <td>
+                            <span class="admin-badge @(cat.IsActive ? "success" : "danger")">
+                                @(cat.IsActive ? "Hoạt động" : "Ẩn")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-area="Admin" asp-controller="Categories" asp-action="Edit" asp-route-id="@cat.Id"
+                                   class="admin-btn-sm primary" title="Chỉnh sửa">
+                                    <i class='bx bx-edit'></i>
+                                </a>
+                                <form asp-area="Admin" asp-controller="Categories" asp-action="Toggle" method="post" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@cat.Id" />
+                                    <button type="submit" class="admin-btn-sm @(cat.IsActive ? "danger" : "success")"
+                                            title="@(cat.IsActive ? "Ẩn danh mục" : "Kích hoạt")"
+                                            onclick="return confirm('@(cat.IsActive ? "Ẩn danh mục này?" : "Kích hoạt danh mục?")')">
+                                        <i class='bx @(cat.IsActive ? "bx-hide" : "bx-show")'></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="9" class="dash-empty">Chưa có danh mục nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

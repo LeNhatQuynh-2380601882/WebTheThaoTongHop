@@ -1,0 +1,214 @@
+@model TamThaiTuSport.Models.Domain.Product
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<TamThaiTuSport.Models.Domain.Category> ?? new();
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Chỉnh sửa: <span style="color:var(--admin-primary)">@Model.Name</span></h1>
+    </div>
+    <div class="dash-header-actions">
+        <a href="/san-pham/@Model.Slug" target="_blank" class="admin-btn secondary">
+            <i class='bx bx-link-external'></i> Xem trang
+        </a>
+        <a asp-area="Admin" asp-controller="Products" asp-action="Index" class="admin-btn secondary">
+            <i class='bx bx-arrow-back'></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<form asp-area="Admin" asp-controller="Products" asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div class="product-form-grid">
+        <!-- Main Info -->
+        <div class="product-form-main">
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h2 class="dash-card-title">Thông tin cơ bản</h2>
+                </div>
+                <div style="padding:1.25rem">
+                    <div class="form-group">
+                        <label class="form-label required">Tên sản phẩm</label>
+                        <input type="text" name="Name" class="form-control" value="@Model.Name" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Slug (URL)</label>
+                            <input type="text" name="Slug" class="form-control" value="@Model.Slug" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Thương hiệu</label>
+                            <input type="text" name="Brand" class="form-control" value="@Model.Brand" placeholder="Nike, Adidas, Yonex..." />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả sản phẩm</label>
+                        <textarea name="Description" class="form-control" rows="5">@Model.Description</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Size có sẵn</label>
+                            <input type="text" name="Sizes" class="form-control" value="@Model.Sizes" placeholder="38,39,40,41,42,43" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Màu sắc</label>
+                            <input type="text" name="Colors" class="form-control" value="@Model.Colors" placeholder="Đen,Trắng,Xanh" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags (từ khóa)</label>
+                        <input type="text" name="Tags" class="form-control" value="@Model.Tags" placeholder="giày,chạy bộ,nike" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-card" style="margin-top:1rem;">
+                <div class="dash-card-header">
+                    <h2 class="dash-card-title">SEO</h2>
+                </div>
+                <div style="padding:1.25rem">
+                    <div class="form-group">
+                        <label class="form-label">Meta Title</label>
+                        <input type="text" name="MetaTitle" class="form-control" value="@Model.MetaTitle" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Meta Description</label>
+                        <textarea name="MetaDescription" class="form-control" rows="2">@Model.MetaDescription</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="product-form-sidebar">
+            <!-- Image -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h2 class="dash-card-title">Ảnh sản phẩm</h2>
+                </div>
+                <div style="padding:1rem;">
+                    <div class="image-upload-zone" id="imageUploadZone">
+                        @if (!string.IsNullOrEmpty(Model.Image))
+                        {
+                            <img id="imagePreview" src="/uploads/products/@Model.Image" alt="@Model.Name" style="width:100%;border-radius:8px;" />
+                            <div id="imagePlaceholder" style="display:none">
+                                <i class='bx bx-cloud-upload'></i>
+                                <p>Kéo thả hoặc nhấn để đổi ảnh</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="image-upload-placeholder" id="imagePlaceholder">
+                                <i class='bx bx-cloud-upload'></i>
+                                <p>Kéo thả hoặc nhấn để chọn ảnh</p>
+                                <small>PNG, JPG, WebP (tối đa 5MB)</small>
+                            </div>
+                            <img id="imagePreview" src="#" alt="Preview" style="display:none;width:100%;border-radius:8px;" />
+                        }
+                    </div>
+                    <input type="file" name="imageFile" id="imageFile" accept="image/*" style="display:none" onchange="previewImage(this)" />
+                    <button type="button" onclick="document.getElementById('imageFile').click()" class="admin-btn secondary" style="width:100%;margin-top:0.75rem;">
+                        <i class='bx bx-image'></i> @(string.IsNullOrEmpty(Model.Image) ? "Chọn ảnh" : "Đổi ảnh")
+                    </button>
+                </div>
+            </div>
+
+            <!-- Price & Stock -->
+            <div class="dash-card" style="margin-top:1rem;">
+                <div class="dash-card-header">
+                    <h2 class="dash-card-title">Giá & Tồn kho</h2>
+                </div>
+                <div style="padding:1.25rem">
+                    <div class="form-group">
+                        <label class="form-label required">Giá gốc (₫)</label>
+                        <input type="number" name="Price" class="form-control" value="@Model.Price" min="0" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Giá khuyến mãi (₫)</label>
+                        <input type="number" name="DiscountPrice" class="form-control" value="@Model.DiscountPrice" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Số lượng tồn kho</label>
+                        <input type="number" name="Stock" class="form-control" value="@Model.Stock" min="0" required />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category & Settings -->
+            <div class="dash-card" style="margin-top:1rem;">
+                <div class="dash-card-header">
+                    <h2 class="dash-card-title">Phân loại & Trạng thái</h2>
+                </div>
+                <div style="padding:1.25rem">
+                    <div class="form-group">
+                        <label class="form-label">Danh mục</label>
+                        <select name="CategoryId" class="form-control admin-select">
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach (var cat in categories)
+                            {
+                                if (cat.Id == Model.CategoryId)
+                                {
+                                    <option value="@cat.Id" selected>@cat.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
+                            <input type="checkbox" name="IsNew" value="true" @(Model.IsNew ? "checked" : "") style="width:18px;height:18px;" />
+                            <span>Đánh dấu là sản phẩm mới</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.875rem;">
+                            <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") style="width:18px;height:18px;" />
+                            <span>Đang kinh doanh (hiển thị)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="admin-btn primary" style="width:100%;margin-top:1rem;padding:0.85rem;">
+                <i class='bx bx-check'></i> Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    const ph = document.getElementById('imagePlaceholder');
+                    if (ph) ph.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        const zone = document.getElementById('imageUploadZone');
+        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('imageFile').files = dt.files;
+                previewImage(document.getElementById('imageFile'));
+            }
+        });
+    </script>
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " | " : "")Admin | Tam Thái Tử Sport</title>
+    <meta name="robots" content="noindex,nofollow" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- BoxIcons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="admin-body">
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <div class="admin-logo">
+                <span class="admin-logo-icon">⚡</span>
+                <div>
+                    <div class="admin-logo-name">Tam Thái Tử</div>
+                    <div class="admin-logo-sub">Admin Panel</div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Thu gọn menu">
+                <i class='bx bx-chevron-left'></i>
+            </button>
+        </div>
+
+        <nav class="admin-nav" role="navigation" aria-label="Admin navigation">
+            <div class="admin-nav-section">
+                <div class="admin-nav-label">Tổng quan</div>
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class='bx bxs-dashboard'></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
+            <div class="admin-nav-section">
+                <div class="admin-nav-label">Quản lý</div>
+                <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" ? "active" : "")">
+                    <i class='bx bx-package'></i>
+                    <span>Đơn hàng</span>
+                    @{
+                        var pendingCount = ViewBag.PendingCount as int?;
+                        if (pendingCount > 0)
+                        {
+                            <span class="admin-nav-badge">@pendingCount</span>
+                        }
+                    }
+                </a>
+                <a asp-area="Admin" asp-controller="Products" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")">
+                    <i class='bx bx-store'></i>
+                    <span>Sản phẩm</span>
+                </a>
+                <a asp-area="Admin" asp-controller="Categories" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")">
+                    <i class='bx bx-category'></i>
+                    <span>Danh mục</span>
+                </a>
+                <a asp-area="Admin" asp-controller="Customers" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")">
+                    <i class='bx bx-user'></i>
+                    <span>Khách hàng</span>
+                </a>
+                <a asp-area="Admin" asp-controller="Chat" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "active" : "")">
+                    <i class='bx bx-chat'></i>
+                    <span>Tư vấn khách hàng</span>
+                </a>
+                <a asp-area="Admin" asp-controller="Coupons" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupons" ? "active" : "")">
+                    <i class='bx bx-discount'></i>
+                    <span>Mã giảm giá</span>
+                </a>
+            </div>
+
+            <div class="admin-nav-section">
+                <div class="admin-nav-label">Báo cáo</div>
+                <a asp-area="Admin" asp-controller="Reports" asp-action="Revenue"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Revenue" ? "active" : "")">
+                    <i class='bx bx-bar-chart-alt-2'></i>
+                    <span>Doanh thu</span>
+                </a>
+                <a asp-area="Admin" asp-controller="Reports" asp-action="Index"
+                   class="admin-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <i class='bx bx-trending-up'></i>
+                    <span>Thống kê</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <a href="/" class="admin-nav-item">
+                <i class='bx bx-home-alt'></i>
+                <span>Về trang chủ</span>
+            </a>
+            <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="admin-nav-item danger" style="width:100%;border:none;cursor:pointer;">
+                    <i class='bx bx-log-out'></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-main" id="adminMain">
+        <!-- TOPBAR -->
+        <header class="admin-topbar">
+            <div class="admin-topbar-left">
+                <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" aria-label="Toggle sidebar">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="admin-breadcrumb">
+                    <span class="admin-breadcrumb-home">
+                        <i class='bx bxs-home'></i>
+                    </span>
+                    <i class='bx bx-chevron-right'></i>
+                    <span>@(ViewData["Title"] ?? "Admin")</span>
+                </div>
+            </div>
+            <div class="admin-topbar-right">
+                <a asp-area="Admin" asp-controller="Chat" asp-action="Index" class="admin-topbar-chat-btn" title="Tư vấn khách hàng">
+                    <i class='bx bx-chat'></i>
+                </a>
+                <div class="admin-topbar-time" id="adminTime"></div>
+                <div class="admin-topbar-user">
+                    <div class="admin-user-avatar">
+                        @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "A")
+                    </div>
+                    <span class="admin-user-name">@(User.Identity?.Name?.Split('@')[0] ?? "Admin")</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- PAGE CONTENT -->
+        <div class="admin-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="admin-alert success">
+                    <i class='bx bx-check-circle'></i> @TempData["Success"]
+                    <button onclick="this.parentElement.remove()" class="admin-alert-close"><i class='bx bx-x'></i></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="admin-alert error">
+                    <i class='bx bx-error-circle'></i> @TempData["Error"]
+                    <button onclick="this.parentElement.remove()" class="admin-alert-close"><i class='bx bx-x'></i></button>
+                </div>
+            }
+            @RenderBody()
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // Sidebar toggle
+        const sidebar = document.getElementById('adminSidebar');
+        const main = document.getElementById('adminMain');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const mobileToggle = document.getElementById('mobileSidebarToggle');
+
+        toggleBtn?.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            main.classList.toggle('expanded');
+        });
+
+        mobileToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Real-time clock
+        function updateTime() {
+            const el = document.getElementById('adminTime');
+            if (el) {
+                const now = new Date();
+                el.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

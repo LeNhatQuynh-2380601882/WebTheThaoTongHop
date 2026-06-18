@@ -1,0 +1,386 @@
+@model TamThaiTuSport.Models.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = Model.CurrentCategory?.Name ?? (string.IsNullOrEmpty(Model.SearchQuery) ? "Tất cả sản phẩm" : $"Kết quả: {Model.SearchQuery}");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/products.css" asp-append-version="true" />
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="breadcrumb-sep">›</span>
+            <a href="/san-pham">Sản phẩm</a>
+            @if (Model.CurrentCategory != null)
+            {
+                <span class="breadcrumb-sep">›</span>
+                <span>@Model.CurrentCategory.Name</span>
+            }
+            else if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <span class="breadcrumb-sep">›</span>
+                <span>Tìm kiếm: @Model.SearchQuery</span>
+            }
+        </nav>
+        <h1 class="page-title">
+            @if (Model.CurrentCategory != null)
+            {
+                <span>@Model.CurrentCategory.IconClass</span>
+                @Model.CurrentCategory.Name
+            }
+            else if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <text>Kết quả cho "<span>@Model.SearchQuery</span>"</text>
+            }
+            else
+            {
+                <text>Tất Cả <span>Sản Phẩm</span></text>
+            }
+        </h1>
+        <div class="page-meta">Tìm thấy @Model.TotalItems sản phẩm</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="product-list-layout">
+
+        <!-- ══════════ FILTER SIDEBAR ══════════ -->
+        <aside class="filter-sidebar" id="filterSidebar" aria-label="Bộ lọc sản phẩm">
+            <div class="filter-title">
+                <span>🔧 Bộ lọc</span>
+                @if (!string.IsNullOrEmpty(Model.CategorySlug) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue)
+                {
+                    <a href="/san-pham" class="filter-clear">Xóa bộ lọc</a>
+                }
+            </div>
+
+            <form id="filterForm" method="get" action="/san-pham">
+                @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                }
+                <input type="hidden" name="sort" value="@Model.SortBy" />
+
+                <!-- Categories -->
+                <div class="filter-section">
+                    <div class="filter-section-title">📂 Danh mục</div>
+                    <div class="filter-options" role="list">
+                        <a href="/san-pham@(string.IsNullOrEmpty(Model.SearchQuery) ? "" : $"?q={Model.SearchQuery}")"
+                           class="filter-option @(string.IsNullOrEmpty(Model.CategorySlug) ? "active" : "")"
+                           role="listitem">
+                            <span class="filter-option-icon">🏪</span>
+                            <span>Tất cả</span>
+                            <span class="filter-option-count">@Model.TotalItems</span>
+                        </a>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <a href="/san-pham?category=@cat.Slug@(!string.IsNullOrEmpty(Model.SearchQuery) ? $"&q={Model.SearchQuery}" : "")"
+                               class="filter-option @(Model.CategorySlug == cat.Slug ? "active" : "")"
+                               role="listitem">
+                                <span class="filter-option-icon">@cat.IconClass</span>
+                                <span>@cat.Name</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <div class="filter-section-title">💰 Khoảng giá</div>
+                    <div class="price-range-inputs">
+                        <div>
+                            <div class="price-label">Từ (₫)</div>
+                            <input type="number" name="minPrice" id="minPrice" class="price-input"
+                                   placeholder="0" value="@Model.MinPrice" min="0" step="100000" />
+                        </div>
+                        <div>
+                            <div class="price-label">Đến (₫)</div>
+                            <input type="number" name="maxPrice" id="maxPrice" class="price-input"
+                                   placeholder="50.000.000" value="@Model.MaxPrice" min="0" step="100000" />
+                        </div>
+                    </div>
+                    <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.35rem;">
+                        <button type="button" class="filter-option" onclick="setPrice(0,500000)" style="border:none;text-align:left">💸 Dưới 500.000₫</button>
+                        <button type="button" class="filter-option" onclick="setPrice(500000,1000000)" style="border:none;text-align:left">💸 500k – 1 triệu</button>
+                        <button type="button" class="filter-option" onclick="setPrice(1000000,3000000)" style="border:none;text-align:left">💸 1 – 3 triệu</button>
+                        <button type="button" class="filter-option" onclick="setPrice(3000000,null)" style="border:none;text-align:left">💸 Trên 3 triệu</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.85rem;font-size:0.82rem">
+                        Áp dụng bộ lọc
+                    </button>
+                </div>
+
+                <!-- Quick filters -->
+                <div class="filter-section">
+                    <div class="filter-section-title">⚡ Lọc nhanh</div>
+                    <div class="filter-options">
+                        <a href="/san-pham?sort=sale@(Model.CategorySlug != null ? $"&category={Model.CategorySlug}" : "")" class="filter-option @(Model.SortBy == "sale" ? "active" : "")">
+                            <span class="filter-option-icon">🔥</span> Đang giảm giá
+                        </a>
+                        <a href="/san-pham?sort=newest@(Model.CategorySlug != null ? $"&category={Model.CategorySlug}" : "")" class="filter-option @(Model.SortBy == "newest" ? "active" : "")">
+                            <span class="filter-option-icon">🆕</span> Mới nhất
+                        </a>
+                        <a href="/san-pham?sort=popular@(Model.CategorySlug != null ? $"&category={Model.CategorySlug}" : "")" class="filter-option @(Model.SortBy == "popular" ? "active" : "")">
+                            <span class="filter-option-icon">⭐</span> Phổ biến nhất
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <!-- ══════════ PRODUCTS AREA ══════════ -->
+        <div class="product-list-area">
+
+            <!-- Toolbar -->
+            <div class="product-list-toolbar">
+                <div class="toolbar-left">
+                    Hiển thị <strong>@((Model.Page - 1) * Model.PageSize + 1)–@Math.Min(Model.Page * Model.PageSize, Model.TotalItems)</strong>
+                    trong <strong>@Model.TotalItems</strong> sản phẩm
+                </div>
+                <div class="toolbar-right">
+                    <!-- Mobile filter toggle -->
+                    <button class="btn btn-secondary btn-sm" id="filterToggleBtn" style="display:none" aria-controls="filterSidebar" aria-expanded="false">
+                        <i class='bx bx-filter'></i> Lọc
+                    </button>
+
+                    <!-- Sort -->
+                    <select class="sort-select" id="sortSelect" aria-label="Sắp xếp">
+                        @{
+                            var sortOptions = new[] {
+                                ("popular","Phổ biến nhất"),("newest","Mới nhất"),
+                                ("price-asc","Giá thấp → cao"),("price-desc","Giá cao → thấp"),
+                                ("sale","Giảm giá nhiều nhất"),("name","Tên A → Z")
+                            };
+                            foreach (var (val, label) in sortOptions)
+                            {
+                                <option value="@val" selected="@(Model.SortBy == val ? "selected" : null)">@label</option>
+                            }
+                        }
+                    </select>
+
+                    <!-- View toggle -->
+                    <div class="view-toggle" role="group" aria-label="Kiểu hiển thị">
+                        <button class="view-btn active" id="gridViewBtn" aria-pressed="true" title="Lưới" onclick="setView('grid')">
+                            <i class='bx bx-grid-alt'></i>
+                        </button>
+                        <button class="view-btn" id="listViewBtn" aria-pressed="false" title="Danh sách" onclick="setView('list')">
+                            <i class='bx bx-list-ul'></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active filter chips -->
+            @if (!string.IsNullOrEmpty(Model.CategorySlug) || Model.MinPrice.HasValue || Model.MaxPrice.HasValue || !string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <div class="active-filters" aria-label="Bộ lọc đang áp dụng">
+                    @if (Model.CurrentCategory != null)
+                    {
+                        <div class="filter-chip">
+                            @Model.CurrentCategory.IconClass @Model.CurrentCategory.Name
+                            <button onclick="location.href='/san-pham'" aria-label="Xóa lọc danh mục">✕</button>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                    {
+                        <div class="filter-chip">
+                            🔍 "@Model.SearchQuery"
+                            <button onclick="location.href='/san-pham'" aria-label="Xóa tìm kiếm">✕</button>
+                        </div>
+                    }
+                    @if (Model.MinPrice.HasValue)
+                    {
+                        <div class="filter-chip">Từ @Model.MinPrice?.ToString("N0")₫<button onclick="clearMinPrice()" aria-label="Xóa giá tối thiểu">✕</button></div>
+                    }
+                    @if (Model.MaxPrice.HasValue)
+                    {
+                        <div class="filter-chip">Đến @Model.MaxPrice?.ToString("N0")₫<button onclick="clearMaxPrice()" aria-label="Xóa giá tối đa">✕</button></div>
+                    }
+                </div>
+            }
+
+            <!-- Products Grid -->
+            @if (Model.Products.Any())
+            {
+                <div class="products-grid" id="productsGrid" role="list">
+                    @foreach (var p in Model.Products)
+                    {
+                        <article class="product-card" role="listitem">
+                            <a href="/san-pham/@p.Slug" class="product-card-image" aria-label="Xem @p.Name">
+                                @if (!string.IsNullOrEmpty(p.Image))
+                                {
+                                    <img src="/uploads/products/@p.Image" alt="@p.Name" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <span style="font-size:4rem;display:flex;align-items:center;justify-content:center;height:100%">
+                                        @(p.Category?.IconClass ?? "👟")
+                                    </span>
+                                }
+                                <div class="product-card-badges">
+                                    @if (p.IsNew) { <span class="badge badge-new">Mới</span> }
+                                    @if (p.DiscountPercent > 0) { <span class="badge badge-sale">-@p.DiscountPercent%</span> }
+                                    @if (p.Stock < 10 && p.Stock > 0) { <span class="badge" style="background:#f59e0b;color:white">Sắp hết</span> }
+                                </div>
+                            </a>
+                            <div class="product-card-actions">
+                                <button class="product-card-action-btn"
+                                        data-wishlist-id="@p.Id"
+                                        onclick="Wishlist.toggle('@p.Id','@p.Name')"
+                                        aria-pressed="false" aria-label="Yêu thích">
+                                    <i class='bx bx-heart'></i>
+                                </button>
+                                <a href="/san-pham/@p.Slug" class="product-card-action-btn" aria-label="Xem chi tiết">
+                                    <i class='bx bx-show'></i>
+                                </a>
+                            </div>
+                            <div class="product-card-body">
+                                @if (!string.IsNullOrEmpty(p.Brand)) { <div class="product-card-brand">@p.Brand</div> }
+                                <h2 class="product-card-name"><a href="/san-pham/@p.Slug">@p.Name</a></h2>
+                                <div class="product-card-rating">
+                                    <div class="stars">★★★★★</div>
+                                    <span>(@p.Reviews.Count(r => r.IsApproved))</span>
+                                </div>
+                                <div class="product-card-price">
+                                    <span class="price-current">@p.FinalPrice.ToString("N0")₫</span>
+                                    @if (p.DiscountPercent > 0)
+                                    {
+                                        <span class="price-original">@p.Price.ToString("N0")₫</span>
+                                        <span class="price-discount">-@p.DiscountPercent%</span>
+                                    }
+                                </div>
+                                <div class="product-card-footer">
+                                    <button class="btn-add-cart"
+                                            data-id="@p.Id" data-name="@p.Name"
+                                            data-price="@p.FinalPrice" data-image="@(p.Image??"")"
+                                            onclick="addToCart(this)" aria-label="Thêm vào giỏ">
+                                        <i class='bx bx-cart-add'></i> Thêm giỏ
+                                    </button>
+                                    <span class="tag">@p.Stock còn</span>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="pagination" aria-label="Phân trang">
+                        @if (Model.HasPrevPage)
+                        {
+                            <a href="@BuildPageUrl(Model.Page - 1)" class="page-btn" aria-label="Trang trước">
+                                <i class='bx bx-chevron-left'></i>
+                            </a>
+                        }
+                        @for (int p = Math.Max(1, Model.Page - 2); p <= Math.Min(Model.TotalPages, Model.Page + 2); p++)
+                        {
+                            <a href="@BuildPageUrl(p)" class="page-btn @(p == Model.Page ? "active" : "")" aria-label="Trang @p" @(p == Model.Page ? "aria-current=page" : "")>
+                                @p
+                            </a>
+                        }
+                        @if (Model.HasNextPage)
+                        {
+                            <a href="@BuildPageUrl(Model.Page + 1)" class="page-btn" aria-label="Trang sau">
+                                <i class='bx bx-chevron-right'></i>
+                            </a>
+                        }
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-title">Không tìm thấy sản phẩm</div>
+                    <p style="font-size:0.875rem;color:var(--text-muted);margin:0.5rem 0 1.5rem">
+                        Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                    </p>
+                    <a href="/san-pham" class="btn btn-primary">Xem tất cả sản phẩm</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string BuildPageUrl(int page)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(Model.SearchQuery)) parts.Add($"q={Uri.EscapeDataString(Model.SearchQuery)}");
+        if (!string.IsNullOrEmpty(Model.CategorySlug)) parts.Add($"category={Model.CategorySlug}");
+        if (Model.SortBy != "popular") parts.Add($"sort={Model.SortBy}");
+        if (Model.MinPrice.HasValue) parts.Add($"minPrice={Model.MinPrice}");
+        if (Model.MaxPrice.HasValue) parts.Add($"maxPrice={Model.MaxPrice}");
+        if (page > 1) parts.Add($"page={page}");
+        return "/san-pham" + (parts.Any() ? "?" + string.Join("&", parts) : "");
+    }
+}
+
+@section Scripts {
+    <script>
+        // Sort change → reload
+        document.getElementById('sortSelect').addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', this.value);
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        });
+
+        // Price range shortcuts
+        function setPrice(min, max) {
+            document.getElementById('minPrice').value = min || '';
+            document.getElementById('maxPrice').value = max || '';
+            document.getElementById('filterForm').submit();
+        }
+        function clearMinPrice() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('minPrice');
+            window.location.href = url.toString();
+        }
+        function clearMaxPrice() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('maxPrice');
+            window.location.href = url.toString();
+        }
+
+        // Grid / List view toggle
+        const savedView = localStorage.getItem('productView') || 'grid';
+        setView(savedView, false);
+        function setView(mode, save = true) {
+            const grid = document.getElementById('productsGrid');
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+            if (!grid) return;
+            if (mode === 'list') {
+                grid.classList.add('list-view');
+                gridBtn?.classList.remove('active');
+                listBtn?.classList.add('active');
+                gridBtn?.setAttribute('aria-pressed', 'false');
+                listBtn?.setAttribute('aria-pressed', 'true');
+            } else {
+                grid.classList.remove('list-view');
+                gridBtn?.classList.add('active');
+                listBtn?.classList.remove('active');
+                gridBtn?.setAttribute('aria-pressed', 'true');
+                listBtn?.setAttribute('aria-pressed', 'false');
+            }
+            if (save) localStorage.setItem('productView', mode);
+        }
+
+        // Mobile filter toggle
+        const filterBtn = document.getElementById('filterToggleBtn');
+        const sidebar = document.getElementById('filterSidebar');
+        filterBtn?.addEventListener('click', () => {
+            const open = sidebar?.classList.toggle('open');
+            filterBtn.setAttribute('aria-expanded', open);
+        });
+        // Show mobile filter btn on small screens
+        if (window.innerWidth < 768) {
+            filterBtn && (filterBtn.style.display = 'flex');
+        }
+    </script>
+}

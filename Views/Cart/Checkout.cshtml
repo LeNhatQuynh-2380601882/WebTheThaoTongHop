@@ -1,0 +1,402 @@
+@model TamThaiTuSport.Models.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+/* ── CHECKOUT PAGE ─────────────────────────── */
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+    padding: 2.5rem 0 5rem;
+}
+.checkout-section {
+    background: var(--gradient-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+.checkout-section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/* Payment methods */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+.payment-method:hover { border-color: var(--border-accent); }
+.payment-method.selected { border-color: var(--primary); background: rgba(249,115,22,0.06); }
+.payment-method input[type="radio"] {
+    accent-color: var(--primary);
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+}
+.payment-method-icon { font-size: 1.5rem; }
+.payment-method-name { font-weight: 600; font-size: 0.9rem; }
+.payment-method-desc { font-size: 0.75rem; color: var(--text-muted); }
+.payment-badge {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary);
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 100px;
+}
+/* Order summary sticky */
+.order-summary {
+    background: var(--gradient-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    position: sticky;
+    top: 90px;
+}
+.order-item-mini {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+}
+.order-item-img {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+}
+.order-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.order-item-name { font-weight: 500; flex: 1; }
+.order-item-price { font-weight: 700; color: var(--primary); white-space: nowrap; }
+.order-item-qty {
+    background: var(--bg-dark);
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+@@media (max-width: 900px) {
+    .checkout-layout { grid-template-columns: 1fr; }
+    .order-summary { position: static; }
+}
+.validation-summary-valid { display: none; }
+.validation-summary-errors {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #ef4444;
+    font-size: 0.9rem;
+}
+.validation-summary-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+}
+</style>
+}
+
+<div class="page-header">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="breadcrumb-sep">›</span>
+            <a href="/gio-hang">Giỏ hàng</a>
+            <span class="breadcrumb-sep">›</span>
+            <span>Thanh toán</span>
+        </nav>
+        <h1 class="page-title">Thanh <span>Toán</span></h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="checkout-layout">
+        <!-- LEFT: Form -->
+        <div>
+            <form method="post" action="/thanh-toan" id="checkoutForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="cartJson" id="cartJsonInput" />
+
+                <div asp-validation-summary="All"></div>
+
+                <!-- 1. Customer info -->
+                <div class="checkout-section">
+                    <div class="checkout-section-title">👤 Thông tin người nhận</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                        <div class="form-group" style="grid-column:1/-1">
+                            <label class="form-label" for="customerName">Họ và tên *</label>
+                            <input type="text" name="customerName" id="customerName" class="form-control"
+                                   value="@Model.CustomerName" required placeholder="Nguyễn Văn A" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="customerPhone">Số điện thoại *</label>
+                            <input type="tel" name="customerPhone" id="customerPhone" class="form-control"
+                                   value="@Model.CustomerPhone" required placeholder="0912 345 678" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="customerEmail">Email</label>
+                            <input type="email" name="customerEmail" id="customerEmail" class="form-control"
+                                   value="@Model.CustomerEmail" placeholder="email@example.com" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Shipping address -->
+                <div class="checkout-section">
+                    <div class="checkout-section-title">🚚 Địa chỉ giao hàng</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                        <div class="form-group">
+                            <label class="form-label" for="province">Tỉnh/Thành phố *</label>
+                            <input type="text" name="province" id="province" class="form-control"
+                                   required placeholder="Hà Nội" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="district">Quận/Huyện *</label>
+                            <input type="text" name="district" id="district" class="form-control"
+                                   required placeholder="Cầu Giấy" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ward">Phường/Xã *</label>
+                            <input type="text" name="ward" id="ward" class="form-control"
+                                   required placeholder="Dịch Vọng" />
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1">
+                            <label class="form-label" for="shippingAddress">Địa chỉ cụ thể *</label>
+                            <input type="text" name="shippingAddress" id="shippingAddress" class="form-control"
+                                   required placeholder="Số nhà, tên đường..." />
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1">
+                            <label class="form-label" for="note">Ghi chú (tùy chọn)</label>
+                            <textarea name="note" id="note" class="form-control" rows="2"
+                                      placeholder="Giao vào buổi sáng, gọi trước khi giao..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Payment method -->
+                <div class="checkout-section">
+                    <div class="checkout-section-title">💳 Phương thức thanh toán</div>
+                    <div class="payment-methods">
+                        <label class="payment-method selected" onclick="selectPayment(this)">
+                            <input type="radio" name="paymentMethod" value="COD" checked />
+                            <span class="payment-method-icon">🤝</span>
+                            <div>
+                                <div class="payment-method-name">Thanh toán khi nhận hàng (COD)</div>
+                                <div class="payment-method-desc">Trả tiền mặt khi nhận hàng tại nhà</div>
+                            </div>
+                            <span class="payment-badge">Phổ biến</span>
+                        </label>
+                        <label class="payment-method" onclick="selectPayment(this)">
+                            <input type="radio" name="paymentMethod" value="BankTransfer" />
+                            <span class="payment-method-icon">🏦</span>
+                            <div>
+                                <div class="payment-method-name">Chuyển khoản ngân hàng</div>
+                                <div class="payment-method-desc">MB Bank: 0123456789 — Tam Thái Tử</div>
+                            </div>
+                        </label>
+                        <label class="payment-method" onclick="selectPayment(this)">
+                            <input type="radio" name="paymentMethod" value="MoMo" />
+                            <span class="payment-method-icon">💜</span>
+                            <div>
+                                <div class="payment-method-name">Ví MoMo</div>
+                                <div class="payment-method-desc">Thanh toán qua ứng dụng MoMo</div>
+                            </div>
+                        </label>
+                        <label class="payment-method" onclick="selectPayment(this)">
+                            <input type="radio" name="paymentMethod" value="VNPay" />
+                            <span class="payment-method-icon">🔵</span>
+                            <div>
+                                <div class="payment-method-name">VNPay</div>
+                                <div class="payment-method-desc">Thẻ ATM/VISA/MasterCard nội địa & quốc tế</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"
+                        style="width:100%;justify-content:center;font-size:1rem">
+                    <i class='bx bx-check-circle'></i> Xác nhận đặt hàng
+                </button>
+
+                <div style="text-align:center;margin-top:0.75rem;font-size:0.78rem;color:var(--text-muted)">
+                    🔒 Thông tin của bạn được bảo mật tuyệt đối bằng SSL
+                </div>
+            </form>
+        </div>
+
+        <!-- RIGHT: Order summary -->
+        <div class="order-summary">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:0.85rem;border-bottom:1px solid var(--border)">
+                📦 Đơn hàng của bạn
+            </div>
+            <div id="checkoutItems">
+                <div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem">
+                    Đang tải giỏ hàng...
+                </div>
+            </div>
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;color:var(--text-secondary)">
+                    <span>Tạm tính</span>
+                    <strong id="coSubtotal">0₫</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;color:var(--text-secondary)">
+                    <span>Vận chuyển</span>
+                    <strong id="coShipping">30.000₫</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:1.05rem;margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid var(--border)">
+                    <strong>Tổng cộng</strong>
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text" id="coTotal">0₫</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+
+function selectPayment(label) {
+    document.querySelectorAll('.payment-method').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+}
+
+function formatVND(n) {
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
+}
+
+function getCartItems() {
+    try {
+        const raw = JSON.parse(localStorage.getItem('ttt_cart') || '[]');
+        return raw.map(item => ({
+            ...item,
+            id: String(item.id),
+            size: item.size || '',
+            color: item.color || '',
+            qty: parseInt(item.qty || 1),
+            price: parseFloat(item.price || 0)
+        }));
+    } catch (e) {
+        console.error("Error loading cart from localStorage:", e);
+        return [];
+    }
+}
+
+function renderCheckoutSummary() {
+    const items = getCartItems();
+    const container = document.getElementById('checkoutItems');
+    if (!container) return;
+
+    if (!items.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem">Giỏ hàng trống!</p>';
+        return;
+    }
+
+    container.innerHTML = items.map(item => `
+        <div class="order-item-mini">
+            <div class="order-item-img">
+                ${item.image
+                    ? `<img src="/uploads/products/${item.image}" alt="${item.name}" />`
+                    : '👟'}
+            </div>
+            <div class="order-item-name">${item.name}
+                ${item.size ? `<small style="color:var(--text-muted)"> / ${item.size}</small>` : ''}
+            </div>
+            <div class="order-item-qty">×${item.qty}</div>
+            <div class="order-item-price">${formatVND(item.price * item.qty)}</div>
+        </div>
+    `).join('');
+
+    const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const shipping = subtotal >= 500000 ? 0 : 30000;
+
+    document.getElementById('coSubtotal').textContent = formatVND(subtotal);
+    document.getElementById('coShipping').textContent = shipping === 0 ? '🎉 Miễn phí' : formatVND(shipping);
+    document.getElementById('coTotal').textContent = formatVND(subtotal + shipping);
+}
+
+// Render immediately since DOM elements are already parsed by the time this script is hit
+renderCheckoutSummary();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            const items = getCartItems();
+            if (!items.length) {
+                e.preventDefault();
+                Toast.warning('Giỏ hàng trống, không thể thanh toán!');
+                return;
+            }
+            // Map keys to match C# CartItemViewModel format
+            const mappedItems = items.map(item => ({
+                ProductId: parseInt(item.id),
+                ProductName: item.name,
+                Image: item.image,
+                Size: item.size,
+                Color: item.color,
+                Quantity: parseInt(item.qty),
+                UnitPrice: parseFloat(item.price)
+            }));
+            
+            // Assign value to hidden input
+            document.getElementById('cartJsonInput').value = JSON.stringify(mappedItems);
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Đang xử lý...';
+            setTimeout(() => {
+                btn.disabled = true;
+            }, 0);
+        });
+    }
+
+    renderCheckoutSummary();
+
+    // Listen to sidebar updates
+    window.addEventListener('cart-updated', () => {
+        renderCheckoutSummary();
+    });
+});
+</script>
+}
+
+

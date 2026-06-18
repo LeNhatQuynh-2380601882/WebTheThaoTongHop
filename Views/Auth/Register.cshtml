@@ -1,0 +1,199 @@
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-wrapper">
+    <div class="auth-orb-1" aria-hidden="true"></div>
+    <div class="auth-orb-2" aria-hidden="true"></div>
+
+    <div class="auth-card" style="max-width:480px">
+        <!-- Logo -->
+        <a href="/" class="auth-logo" aria-label="Về trang chủ">
+            <div class="auth-logo-icon">⚡</div>
+            <span class="auth-logo-brand">Tam Thái Tử Sport</span>
+        </a>
+
+        <h1 class="auth-title">Đăng ký</h1>
+        <p class="auth-subtitle">Tạo tài khoản để nhận ưu đãi độc quyền và theo dõi đơn hàng.</p>
+
+        <!-- Benefits -->
+        <div class="auth-benefits">
+            <div class="auth-benefit"><span class="auth-benefit-icon">🎁</span> Giảm 10% đơn hàng đầu tiên với mã <strong>WELCOME10</strong></div>
+            <div class="auth-benefit"><span class="auth-benefit-icon">⭐</span> Tích điểm thưởng với mỗi đơn hàng</div>
+            <div class="auth-benefit"><span class="auth-benefit-icon">🚀</span> Theo dõi đơn hàng realtime</div>
+            <div class="auth-benefit"><span class="auth-benefit-icon">❤️</span> Lưu danh sách sản phẩm yêu thích</div>
+        </div>
+
+        <!-- Errors -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="auth-error" role="alert">
+                <i class='bx bx-error-circle'></i>
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <span>@error.ErrorMessage</span>
+                }
+            </div>
+        }
+
+        <!-- Register Form -->
+        <form method="post" asp-controller="Auth" asp-action="Register" class="auth-form" id="registerForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label class="form-label" for="fullName">Họ và tên</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-user auth-input-icon' aria-hidden="true"></i>
+                    <input type="text"
+                           name="fullName"
+                           id="fullName"
+                           class="auth-input"
+                           placeholder="Nguyễn Văn A"
+                           autocomplete="name"
+                           required
+                           minlength="2" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="regEmail">Địa chỉ email</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-envelope auth-input-icon' aria-hidden="true"></i>
+                    <input type="email"
+                           name="email"
+                           id="regEmail"
+                           class="auth-input"
+                           placeholder="example@email.com"
+                           autocomplete="email"
+                           required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="regPassword">Mật khẩu</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-lock-alt auth-input-icon' aria-hidden="true"></i>
+                    <input type="password"
+                           name="password"
+                           id="regPassword"
+                           class="auth-input"
+                           placeholder="Ít nhất 8 ký tự"
+                           autocomplete="new-password"
+                           required
+                           minlength="8"
+                           oninput="checkStrength(this.value)" />
+                    <button type="button" class="password-toggle" onclick="togglePwd('regPassword','pwdIcon1')" aria-label="Hiện/ẩn mật khẩu">
+                        <i class='bx bx-hide' id="pwdIcon1"></i>
+                    </button>
+                </div>
+                <!-- Password strength -->
+                <div class="password-strength" id="strengthBar"><div class="password-strength-bar" id="strengthFill"></div></div>
+                <div class="password-strength-text" id="strengthText"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-lock-check auth-input-icon' aria-hidden="true"></i>
+                    <input type="password"
+                           name="confirmPassword"
+                           id="confirmPassword"
+                           class="auth-input"
+                           placeholder="Nhập lại mật khẩu"
+                           autocomplete="new-password"
+                           required
+                           oninput="checkMatch()" />
+                    <button type="button" class="password-toggle" onclick="togglePwd('confirmPassword','pwdIcon2')" aria-label="Hiện/ẩn">
+                        <i class='bx bx-hide' id="pwdIcon2"></i>
+                    </button>
+                </div>
+                <div id="matchText" style="font-size:0.72rem;margin-top:0.25rem"></div>
+            </div>
+
+            <!-- Terms -->
+            <div style="display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--text-secondary)">
+                <input type="checkbox" id="agreeTerms" required style="margin-top:2px;flex-shrink:0" />
+                <label for="agreeTerms">
+                    Tôi đồng ý với <a href="#" style="color:var(--primary)">Điều khoản dịch vụ</a>
+                    và <a href="#" style="color:var(--primary)">Chính sách bảo mật</a> của Tam Thái Tử Sport.
+                </label>
+            </div>
+
+            <button type="submit" class="btn-auth" id="registerBtn">
+                <i class='bx bx-user-plus'></i> Tạo tài khoản miễn phí
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Đã có tài khoản?
+            <a asp-controller="Auth" asp-action="Login">Đăng nhập →</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePwd(id, iconId) {
+            const input = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bx bx-show';
+            } else {
+                input.type = 'password';
+                icon.className = 'bx bx-hide';
+            }
+        }
+
+        function checkStrength(val) {
+            const bar = document.getElementById('strengthBar');
+            const fill = document.getElementById('strengthFill');
+            const text = document.getElementById('strengthText');
+            if (!val) { fill.style.width = '0'; text.textContent = ''; return; }
+
+            let score = 0;
+            if (val.length >= 8) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+
+            const levels = ['', 'strength-weak', 'strength-fair', 'strength-good', 'strength-strong'];
+            const texts = ['', '😟 Yếu', '😐 Trung bình', '😊 Tốt', '💪 Mạnh'];
+            const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#22c55e'];
+
+            bar.className = `password-strength ${levels[score] || ''}`;
+            fill.style.background = colors[score];
+            text.textContent = texts[score] || '';
+            text.style.color = colors[score];
+        }
+
+        function checkMatch() {
+            const pwd = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const text = document.getElementById('matchText');
+            if (!confirm) { text.textContent = ''; return; }
+            if (pwd === confirm) {
+                text.innerHTML = '<span style="color:#22c55e">✅ Mật khẩu khớp</span>';
+            } else {
+                text.innerHTML = '<span style="color:#ef4444">❌ Mật khẩu không khớp</span>';
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            const agree = document.getElementById('agreeTerms');
+            if (!agree.checked) {
+                e.preventDefault();
+                Toast?.warning('⚠️ Vui lòng đồng ý với điều khoản dịch vụ');
+                return;
+            }
+            const btn = document.getElementById('registerBtn');
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Đang tạo tài khoản...';
+            btn.disabled = true;
+        });
+    </script>
+}
