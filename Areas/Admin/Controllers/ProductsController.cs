@@ -141,6 +141,21 @@ namespace TamThaiTuSport.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        // POST /admin/products/toggleactive/{id}
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product == null) return NotFound();
+
+            product.IsActive = !product.IsActive; // Toggle active state
+            product.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = product.IsActive ? "✅ Đã hiển thị sản phẩm." : "✅ Đã ẩn sản phẩm.";
+            return RedirectToAction("Index");
+        }
+
         // POST /admin/products/delete/{id}
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -148,10 +163,32 @@ namespace TamThaiTuSport.Areas.Admin.Controllers
             var product = await _db.Products.FindAsync(id);
             if (product == null) return NotFound();
 
-            product.IsActive = false; // Soft delete
+            // Check if product is in any orders
+            bool hasOrders = await _db.OrderDetails.AnyAsync(od => od.ProductId == id);
+            if (hasOrders)
+            {
+                TempData["Error"] = "❌ Không thể xóa vĩnh viễn sản phẩm này vì đã có khách hàng mua sản phẩm (đơn hàng tồn tại). Bạn chỉ có thể chọn 'Ẩn' sản phẩm để tránh ảnh hưởng đến lịch sử giao dịch.";
+                return RedirectToAction("Index");
+            }
+
+            // Remove image from directory if exists
+            if (!string.IsNullOrEmpty(product.Image))
+            {
+                var imagePath = Path.Combine(_env.WebRootPath, "uploads", "products", product.Image);
+                if (System.IO.File.Exists(imagePath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(imagePath);
+                    }
+                    catch { /* ignore image deletion errors */ }
+                }
+            }
+
+            _db.Products.Remove(product);
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = "✅ Đã ẩn sản phẩm.";
+            TempData["Success"] = "✅ Đã xóa vĩnh viễn sản phẩm thành công.";
             return RedirectToAction("Index");
         }
 

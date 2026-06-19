@@ -123,12 +123,28 @@
                                 <a href="/san-pham/@p.Slug" target="_blank" class="admin-btn-sm" title="Xem trang">
                                     <i class='bx bx-link-external'></i>
                                 </a>
-                                <form asp-area="Admin" asp-controller="Products" asp-action="Delete" method="post" style="display:inline"
-                                      onsubmit="return confirm('Ẩn sản phẩm này?')">
+                                <form asp-area="Admin" asp-controller="Products" asp-action="ToggleActive" method="post" style="display:inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@p.Id" />
-                                    <button type="submit" class="admin-btn-sm danger" title="Ẩn">
-                                        <i class='bx bx-hide'></i>
+                                    @if (p.IsActive)
+                                    {
+                                        <button type="submit" class="admin-btn-sm" title="Ẩn sản phẩm" style="color: var(--admin-text-secondary);">
+                                            <i class='bx bx-hide'></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="admin-btn-sm" title="Hiển thị sản phẩm" style="color: var(--admin-success); background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2);">
+                                            <i class='bx bx-show'></i>
+                                        </button>
+                                    }
+                                </form>
+                                <form asp-area="Admin" asp-controller="Products" asp-action="Delete" method="post" style="display:inline"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN sản phẩm này? Thao tác này không thể hoàn tác!')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <button type="submit" class="admin-btn-sm danger" title="Xóa vĩnh viễn">
+                                        <i class='bx bx-trash'></i>
                                     </button>
                                 </form>
                             </div>

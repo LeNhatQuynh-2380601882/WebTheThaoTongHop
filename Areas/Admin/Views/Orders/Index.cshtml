@@ -82,7 +82,35 @@
                                 @(o.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "Đã TT" : "Chưa TT")
                             </span>
                         </td>
-                        <td><span class="admin-badge @statusClass">@statusText</span></td>
+                        <td>
+                            <form asp-area="Admin" asp-controller="Orders" asp-action="UpdateStatus" method="post" style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@o.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <select name="status" class="admin-select-sm status-badge-@statusClass" onchange="if(confirm('Xác nhận thay đổi trạng thái đơn hàng #@o.Id?')) this.form.submit(); else { location.reload(); }">
+                                    @foreach (TamThaiTuSport.Models.Domain.OrderStatus s in Enum.GetValues(typeof(TamThaiTuSport.Models.Domain.OrderStatus)))
+                                    {
+                                        var label = s switch
+                                        {
+                                            TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => "Chờ duyệt",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => "Xác nhận",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => "Đang giao",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => "Đã giao",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => "Đã hủy",
+                                            _ => s.ToString()
+                                        };
+                                        if (s == o.Status)
+                                        {
+                                            <option value="@s" selected>@label</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@label</option>
+                                        }
+                                    }
+                                </select>
+                            </form>
+                        </td>
                         <td class="text-muted">@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                         <td>
                             <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@o.Id"

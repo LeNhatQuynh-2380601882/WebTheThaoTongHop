@@ -71,7 +71,7 @@ namespace TamThaiTuSport.Areas.Admin.Controllers
 
         // POST /admin/orders/update-status
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, OrderStatus status, string? trackingCode)
+        public async Task<IActionResult> UpdateStatus(int id, OrderStatus status, string? trackingCode, string? returnUrl)
         {
             var order = await _db.Orders.FindAsync(id);
             if (order == null) return NotFound();
@@ -83,6 +83,10 @@ namespace TamThaiTuSport.Areas.Admin.Controllers
 
             await _db.SaveChangesAsync();
             TempData["Success"] = "✅ Cập nhật trạng thái đơn hàng thành công.";
+
+            if (!string.IsNullOrEmpty(returnUrl))
+                return Redirect(returnUrl);
+
             return RedirectToAction("Detail", new { id });
         }
     }
