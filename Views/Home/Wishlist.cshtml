@@ -1,0 +1,230 @@
+@{
+    ViewData["Title"] = "Danh sách yêu thích";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    .wishlist-wrapper {
+        padding: 2.5rem 0 5rem;
+    }
+    .wishlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .wishlist-empty {
+        text-align: center;
+        padding: 5rem 1rem;
+        background: var(--gradient-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+    }
+    .wishlist-empty-icon { font-size: 5rem; margin-bottom: 1rem; }
+    .wishlist-empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 0.75rem; }
+
+    /* Animated card removal */
+    .wishlist-card {
+        transition: transform 0.3s ease, opacity 0.3s ease, border-color 0.25s ease;
+    }
+    .wishlist-card.removing {
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+    }
+    .btn-wishlist-remove {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-wishlist-remove:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: white;
+    }
+    .product-card-footer-wishlist {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: auto;
+    }
+</style>
+}
+
+<div class="page-header">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="breadcrumb-sep">›</span>
+            <span>Danh sách yêu thích</span>
+        </nav>
+        <h1 class="page-title">Sản Phẩm <span>Yêu Thích</span> <span id="wishlistCountText" style="font-size:1.2rem;font-weight:400;color:var(--text-muted)"></span></h1>
+    </div>
+</div>
+
+<div class="container wishlist-wrapper">
+    <!-- Loading State -->
+    <div id="wishlistLoading" style="text-align:center;padding:5rem 0;">
+        <i class='bx bx-loader-alt bx-spin' style='font-size:3rem;color:var(--primary);'></i>
+        <p style="margin-top:1rem;color:var(--text-secondary)">Đang tải sản phẩm yêu thích của bạn...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="wishlistEmptyState" style="display:none">
+        <div class="wishlist-empty">
+            <div class="wishlist-empty-icon">❤️</div>
+            <div class="wishlist-empty-title">Danh sách trống</div>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem">Bạn chưa lưu sản phẩm yêu thích nào. Hãy khám phá và thả tim sản phẩm nhé!</p>
+            <a href="/san-pham" class="btn btn-primary btn-lg">
+                <i class='bx bx-store'></i> Khám phá sản phẩm
+            </a>
+        </div>
+    </div>
+
+    <!-- Grid List -->
+    <div class="wishlist-grid" id="wishlistGrid" style="display:none" role="list">
+        <!-- Rendered by JavaScript -->
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function formatVND(n) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
+    }
+
+    async function loadWishlist() {
+        const loadingEl = document.getElementById('wishlistLoading');
+        const emptyEl = document.getElementById('wishlistEmptyState');
+        const gridEl = document.getElementById('wishlistGrid');
+        const countTextEl = document.getElementById('wishlistCountText');
+
+        // Read IDs from localStorage
+        let savedIds = [];
+        try {
+            savedIds = JSON.parse(localStorage.getItem('ttt_wishlist') || '[]');
+        } catch {
+            savedIds = [];
+        }
+
+        if (savedIds.length === 0) {
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+            gridEl.style.display = 'none';
+            countTextEl.textContent = '';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/products/get-by-ids?ids=${savedIds.join(',')}`);
+            if (!res.ok) throw new Error();
+            const products = await res.json();
+
+            if (products.length === 0) {
+                loadingEl.style.display = 'none';
+                emptyEl.style.display = 'block';
+                gridEl.style.display = 'none';
+                countTextEl.textContent = '';
+                return;
+            }
+
+            countTextEl.textContent = `(${products.length} sản phẩm)`;
+
+            gridEl.innerHTML = products.map((p, i) => `
+                <article class="product-card wishlist-card" id="wishlistCard-${p.id}" role="listitem" data-animate>
+                    <a href="/san-pham/${p.slug}" class="product-card-image" aria-label="Xem ${p.name}">
+                        ${p.image 
+                            ? `<img src="/uploads/products/${p.image}" alt="${p.name}" loading="lazy" />` 
+                            : `<span style="font-size:4rem;display:flex;align-items:center;justify-content:center;height:100%">${p.categoryIcon || '👟'}</span>`}
+                        <div class="product-card-badges">
+                            ${p.discountPercent > 0 ? `<span class="badge badge-sale">-${p.discountPercent}%</span>` : ''}
+                            ${p.stock === 0 ? `<span class="badge" style="background:#ef4444;color:white">Hết hàng</span>` : ''}
+                        </div>
+                    </a>
+                    <div class="product-card-body">
+                        ${p.brand ? `<div class="product-card-brand">${p.brand}</div>` : ''}
+                        <h3 class="product-card-name"><a href="/san-pham/${p.slug}">${p.name}</a></h3>
+                        <div class="product-card-rating">
+                            <div class="stars">★★★★★</div>
+                        </div>
+                        <div class="product-card-price">
+                            <span class="price-current">${formatVND(p.finalPrice)}</span>
+                            ${p.discountPercent > 0 ? `<span class="price-original">${formatVND(p.price)}</span>` : ''}
+                        </div>
+                        <div class="product-card-footer-wishlist">
+                            <button type="button" class="btn-add-cart" style="flex: 1;"
+                                    data-id="${p.id}"
+                                    data-name="${p.name}"
+                                    data-price="${p.finalPrice}"
+                                    data-image="${p.image || ''}"
+                                    onclick="addToCart(this)"
+                                    ${p.stock === 0 ? 'disabled' : ''}
+                                    aria-label="Thêm ${p.name} vào giỏ">
+                                <i class='bx bx-cart-add'></i> Thêm giỏ
+                            </button>
+                            <button type="button" class="btn-wishlist-remove" 
+                                    onclick="removeWishlistItem('${p.id}', '${p.name.replace(/'/g, "\\'")}')"
+                                    aria-label="Xóa khỏi danh sách yêu thích">
+                                <i class='bx bx-trash'></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+
+            loadingEl.style.display = 'none';
+            gridEl.style.display = 'grid';
+
+            // Trigger scroll animation check
+            if (window.ScrollAnim && typeof ScrollAnim.init === 'function') {
+                ScrollAnim.init();
+            }
+
+        } catch (err) {
+            loadingEl.style.display = 'none';
+            Toast.error("❌ Không thể tải danh sách sản phẩm yêu thích. Vui lòng tải lại trang.");
+        }
+    }
+
+    function removeWishlistItem(id, name) {
+        const card = document.getElementById(`wishlistCard-${id}`);
+        if (card) {
+            card.classList.add('removing');
+        }
+
+        setTimeout(() => {
+            // Update localStorage
+            let savedIds = [];
+            try {
+                savedIds = JSON.parse(localStorage.getItem('ttt_wishlist') || '[]');
+            } catch {
+                savedIds = [];
+            }
+
+            savedIds = savedIds.filter(itemId => itemId !== id);
+            localStorage.setItem('ttt_wishlist', JSON.stringify(savedIds));
+
+            // Sync with Global Wishlist object
+            if (window.Wishlist) {
+                Wishlist.items.delete(id);
+                Wishlist.updateButtons();
+                Wishlist.updateCount();
+            }
+
+            Toast.info(`💔 Đã xóa <strong>${name}</strong> khỏi danh sách yêu thích`);
+            
+            // Reload wishlist grid
+            loadWishlist();
+        }, 300);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadWishlist);
+</script>
+}

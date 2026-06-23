@@ -1,0 +1,359 @@
+@{
+    ViewData["Title"] = "Giới Thiệu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    /* ─── ABOUT HERO ────────────────────────────────────── */
+    .about-hero {
+        position: relative;
+        background: radial-gradient(circle at 20% 30%, rgba(249, 115, 22, 0.12) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 60%),
+                    var(--bg-dark);
+        padding: 6rem 0 5rem;
+        border-bottom: 1px solid var(--border);
+        text-align: center;
+        overflow: hidden;
+    }
+    .about-hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid var(--border-accent);
+        color: var(--primary);
+        padding: 0.4rem 1.2rem;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 1.5rem;
+    }
+    .about-hero-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-bottom: 1.25rem;
+    }
+    .about-hero-title span {
+        background: var(--gradient-brand);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .about-hero-desc {
+        color: var(--text-secondary);
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: 1.15rem;
+        line-height: 1.8;
+    }
+
+    /* ─── GRID INFO ─────────────────────────────────────── */
+    .about-section {
+        padding: 5rem 0;
+    }
+    .about-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+    }
+    .about-img-frame {
+        position: relative;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        aspect-ratio: 4 / 3;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gradient-card);
+    }
+    .about-img-placeholder {
+        font-size: 5rem;
+        animation: float 4s ease-in-out infinite;
+    }
+    
+    @@keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0); }
+        50% { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    .about-content-subtitle {
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .about-content-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+        line-height: 1.2;
+    }
+    .about-content-text {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ─── VALUES & MISSION ──────────────────────────────── */
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    .value-card {
+        background: var(--gradient-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 2.25rem 1.75rem;
+        text-align: center;
+        transition: var(--transition-bounce);
+    }
+    .value-card:hover {
+        border-color: var(--border-accent);
+        transform: translateY(-6px);
+        box-shadow: var(--shadow-md), var(--shadow-glow);
+    }
+    .value-card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        transition: var(--transition);
+    }
+    .value-card:hover .value-card-icon {
+        transform: scale(1.15) rotate(-5deg);
+    }
+    .value-card-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+    .value-card-desc {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.7;
+    }
+
+    /* ─── MILESTONES / STATS ────────────────────────────── */
+    .about-stats {
+        background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-dark) 100%);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 4rem 0;
+    }
+    .about-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+        text-align: center;
+    }
+    .about-stat-number {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: var(--gradient-brand);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    .about-stat-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+    }
+
+    /* ─── STORES SECTION ────────────────────────────────── */
+    .stores-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .store-card {
+        background: var(--gradient-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem;
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+        transition: var(--transition);
+    }
+    .store-card:hover {
+        border-color: var(--border-accent);
+        transform: translateY(-4px);
+    }
+    .store-icon {
+        font-size: 2.5rem;
+        background: rgba(249, 115, 22, 0.1);
+        border-radius: var(--radius);
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--primary);
+    }
+    .store-info-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 0.35rem;
+    }
+    .store-info-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    @@media (max-width: 900px) {
+        .about-grid-2 { grid-template-columns: 1fr; gap: 2rem; }
+        .values-grid { grid-template-columns: 1fr; }
+        .about-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+        .stores-grid { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
+<!-- HERO BANNER -->
+<section class="about-hero" aria-label="Giới thiệu Banner">
+    <div class="container" data-animate>
+        <div class="about-hero-tag">🔥 Về Chúng Tôi</div>
+        <h1 class="about-hero-title">Kiến Tạo Sức Mạnh<span> Thể Thao Đỉnh Cao</span></h1>
+        <p class="about-hero-desc">
+            Tam Thái Tử Sport là điểm đến tin cậy của cộng đồng đam mê thể thao tại Việt Nam. Chúng tôi cung cấp những sản phẩm chính hãng hàng đầu, hỗ trợ mọi cá nhân chinh phục mục tiêu vận động của mình.
+        </p>
+    </div>
+</section>
+
+<!-- MAIN INTRODUCTION -->
+<section class="about-section" aria-labelledby="story-title">
+    <div class="container">
+        <div class="about-grid-2">
+            <div class="about-img-frame" data-animate>
+                <div class="about-img-placeholder">⚡🏆👟</div>
+            </div>
+            <div data-animate>
+                <div class="about-content-subtitle">Câu chuyện của chúng tôi</div>
+                <h2 class="about-content-title" id="story-title">Khởi nguồn từ niềm đam mê vận động</h2>
+                <p class="about-content-text">
+                    Được thành lập từ năm 2021, Tam Thái Tử Sport xuất phát từ ước mơ xây dựng một sân chơi chuyên nghiệp, nơi cung cấp những sản phẩm thể thao chất lượng và đạt tiêu chuẩn quốc tế cho người Việt Nam.
+                </p>
+                <p class="about-content-text">
+                    Chúng tôi không chỉ là một cửa hàng bán lẻ, mà còn mong muốn truyền tải tinh thần thể thao năng động, lành mạnh đến mọi thế hệ. Từ các vận động viên chuyên nghiệp đến những người mới bắt đầu tập luyện, Tam Thái Tử Sport cam kết luôn đồng hành và nâng đỡ từng bước chân của bạn.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS/MILESTONES -->
+<section class="about-stats" aria-label="Thống kê thành tựu">
+    <div class="container">
+        <div class="about-stats-grid">
+            <div data-animate>
+                <div class="about-stat-number">5+</div>
+                <div class="about-stat-label">Năm phát triển</div>
+            </div>
+            <div data-animate data-delay="1">
+                <div class="about-stat-number">20K+</div>
+                <div class="about-stat-label">Khách hàng tin dùng</div>
+            </div>
+            <div data-animate data-delay="2">
+                <div class="about-stat-number">100%</div>
+                <div class="about-stat-label">Chính hãng cam kết</div>
+            </div>
+            <div data-animate data-delay="3">
+                <div class="about-stat-number">4.9★</div>
+                <div class="about-stat-label">Đánh giá hài lòng</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CORE VALUES -->
+<section class="about-section" aria-labelledby="values-title" style="background: radial-gradient(ellipse at 50% 100%, rgba(249, 115, 22, 0.05) 0%, transparent 60%);">
+    <div class="container">
+        <div class="section-header" data-animate>
+            <div class="section-tag">💎 Giá trị</div>
+            <h2 class="section-title" id="values-title">Giá Trị <span>Cốt Lõi</span></h2>
+            <p class="section-desc">Kim chỉ nam trong mọi hoạt động kinh doanh và phục vụ khách hàng của chúng tôi</p>
+        </div>
+        
+        <div class="values-grid">
+            <div class="value-card" data-animate>
+                <span class="value-card-icon">🤝</span>
+                <h3 class="value-card-title">Chất lượng hàng đầu</h3>
+                <p class="value-card-desc">Cam kết sản phẩm 100% chính hãng từ các thương hiệu lớn như Nike, Adidas, Yonex, Asics, Puma...</p>
+            </div>
+            <div class="value-card" data-animate data-delay="1">
+                <span class="value-card-icon">⚡</span>
+                <h3 class="value-card-title">Phục vụ tận tâm</h3>
+                <p class="value-card-desc">Khách hàng là trung tâm. Đội ngũ tư vấn am hiểu kỹ thuật sản phẩm, luôn sẵn sàng hỗ trợ 24/7.</p>
+            </div>
+            <div class="value-card" data-animate data-delay="2">
+                <span class="value-card-icon">🚀</span>
+                <h3 class="value-card-title">Đổi mới không ngừng</h3>
+                <p class="value-card-desc">Cập nhật nhanh chóng những xu hướng thời trang và công nghệ dụng cụ thể thao mới nhất trên thế giới.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STORES SYSTEM -->
+<section class="about-section" style="padding-top: 0;" aria-labelledby="stores-title">
+    <div class="container">
+        <div class="section-header" data-animate>
+            <div class="section-tag">📍 Chi nhánh</div>
+            <h2 class="section-title" id="stores-title">Hệ Thống <span>Cửa Hàng</span></h2>
+            <p class="section-desc">Ghé thăm chi nhánh của chúng tôi để được trải nghiệm và tư vấn trực tiếp tốt nhất</p>
+        </div>
+
+        <div class="stores-grid">
+            <div class="store-card" data-animate>
+                <div class="store-icon">📍</div>
+                <div>
+                    <h3 class="store-info-title">Chi nhánh Hà Nội</h3>
+                    <p class="store-info-text">
+                        <strong>Địa chỉ:</strong> 123 Đường Thể Thao, Q. Cầu Giấy, Hà Nội<br>
+                        <strong>Hotline:</strong> 1800 1234 (Nhánh 1)<br>
+                        <strong>Giờ mở cửa:</strong> 8:00 – 21:00 (Tất cả các ngày)
+                    </p>
+                </div>
+            </div>
+            <div class="store-card" data-animate data-delay="1">
+                <div class="store-icon">📍</div>
+                <div>
+                    <h3 class="store-info-title">Chi nhánh TP. Hồ Chí Minh</h3>
+                    <p class="store-info-text">
+                        <strong>Địa chỉ:</strong> 456 Đường Vận Động, Quận 1, TP. HCM<br>
+                        <strong>Hotline:</strong> 1800 1234 (Nhánh 2)<br>
+                        <strong>Giờ mở cửa:</strong> 8:00 – 21:00 (Tất cả các ngày)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

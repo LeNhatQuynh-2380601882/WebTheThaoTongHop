@@ -1,0 +1,127 @@
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-wrapper">
+    <div class="auth-orb-1" aria-hidden="true"></div>
+    <div class="auth-orb-2" aria-hidden="true"></div>
+
+    <div class="auth-card">
+        <!-- Logo -->
+        <a href="/" class="auth-logo" aria-label="Về trang chủ">
+            <div class="auth-logo-icon">⚡</div>
+            <span class="auth-logo-brand">Tam Thái Tử Sport</span>
+        </a>
+
+        <h1 class="auth-title">Đăng nhập</h1>
+        <p class="auth-subtitle">Chào mừng trở lại! Đăng nhập để tiếp tục mua sắm.</p>
+
+        <!-- Errors -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="auth-error" role="alert">
+                <i class='bx bx-error-circle'></i>
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <span>@error.ErrorMessage</span>
+                }
+            </div>
+        }
+
+        <!-- TempData success (after register redirect) -->
+        @if (TempData["Success"] != null)
+        {
+            <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-left:3px solid #22c55e;color:#4ade80;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.85rem;margin-bottom:1.25rem" role="status">
+                @TempData["Success"]
+            </div>
+        }
+
+        <!-- Login Form -->
+        <form method="post" asp-controller="Auth" asp-action="Login" asp-route-returnUrl="@returnUrl" class="auth-form" novalidate>
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label class="form-label" for="email">Địa chỉ email</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-envelope auth-input-icon' aria-hidden="true"></i>
+                    <input type="email"
+                           name="email"
+                           id="email"
+                           class="auth-input"
+                           placeholder="example@email.com"
+                           autocomplete="email"
+                           required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Mật khẩu</label>
+                <div class="auth-input-wrap">
+                    <i class='bx bx-lock-alt auth-input-icon' aria-hidden="true"></i>
+                    <input type="password"
+                           name="password"
+                           id="password"
+                           class="auth-input"
+                           placeholder="••••••••"
+                           autocomplete="current-password"
+                           required />
+                    <button type="button" class="password-toggle" onclick="togglePwd('password')" aria-label="Hiện/ẩn mật khẩu">
+                        <i class='bx bx-hide' id="pwdIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="auth-remember">
+                <div class="auth-remember-left">
+                    <input type="checkbox" name="rememberMe" id="rememberMe" value="true" />
+                    <label for="rememberMe">Ghi nhớ đăng nhập</label>
+                </div>
+                <a href="#" class="auth-forgot">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="btn-auth" id="loginBtn">
+                <i class='bx bx-log-in'></i> Đăng nhập
+            </button>
+        </form>
+
+        <!-- Demo credentials -->
+        <div style="margin-top:1rem;padding:0.85rem;background:rgba(249,115,22,0.05);border:1px dashed var(--border-accent);border-radius:var(--radius);font-size:0.78rem;color:var(--text-muted)">
+            <strong style="color:var(--primary)">Demo Admin:</strong>
+            admin@tamthaitu.vn / Admin@123456
+        </div>
+
+        <div class="auth-footer">
+            Chưa có tài khoản?
+            <a asp-controller="Auth" asp-action="Register">Đăng ký miễn phí →</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePwd(id) {
+            const input = document.getElementById(id);
+            const icon = document.getElementById('pwdIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bx bx-show';
+            } else {
+                input.type = 'password';
+                icon.className = 'bx bx-hide';
+            }
+        }
+
+        // Submit loading state
+        document.querySelector('form').addEventListener('submit', function () {
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Đang đăng nhập...';
+            btn.disabled = true;
+        });
+    </script>
+}

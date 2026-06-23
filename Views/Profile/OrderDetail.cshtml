@@ -1,0 +1,306 @@
+@model TamThaiTuSport.Models.Domain.Order
+@{
+    ViewData["Title"] = $"Đơn hàng #{Model.Id}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var (statusColor, statusText) = Model.Status switch
+    {
+        TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => ("#f59e0b", "⏳ Chờ duyệt"),
+        TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => ("#3b82f6", "✅ Đã xác nhận"),
+        TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => ("#a855f7", "🚚 Đang giao"),
+        TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => ("#22c55e", "🎉 Đã giao"),
+        TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => ("#ef4444", "❌ Đã hủy"),
+        _ => ("#64748b", Model.Status.ToString())
+    };
+}
+
+@section Styles {
+<style>
+.order-detail-layout { padding: 2.5rem 0 5rem; }
+.order-detail-grid { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; align-items: start; margin-top: 1.5rem; }
+.od-card { background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.25rem; }
+.od-card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.od-card-title { font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--text); }
+.od-card-body { padding: 1.25rem 1.5rem; }
+.order-status-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 100px; font-weight: 700; font-size: 0.85rem; }
+.order-track { display: flex; flex-direction: column; gap: 0; }
+.order-track-item { display: flex; align-items: flex-start; gap: 1rem; position: relative; padding-bottom: 1.25rem; }
+.order-track-item:last-child { padding-bottom: 0; }
+.order-track-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; position: relative; z-index: 1; }
+.order-track-dot.done { background: rgba(34,197,94,0.15); }
+.order-track-dot.active { background: rgba(249,115,22,0.15); }
+.order-track-dot.pending { background: rgba(255,255,255,0.04); }
+.order-track-item::before { content: ''; position: absolute; left: 15px; top: 32px; bottom: -5px; width: 2px; background: var(--border); }
+.order-track-item:last-child::before { display: none; }
+.order-track-info { flex: 1; }
+.order-track-name { font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: 0.25rem; }
+.order-track-desc { font-size: 0.78rem; color: var(--text-muted); }
+.product-row { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+.product-row:last-child { border-bottom: none; }
+.product-thumb { width: 60px; height: 60px; border-radius: 10px; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+.product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.product-info { flex: 1; }
+.product-name { font-size: 0.875rem; font-weight: 500; margin-bottom: 0.2rem; }
+.product-meta { font-size: 0.75rem; color: var(--text-muted); }
+.product-qty { color: var(--text-muted); font-size: 0.82rem; white-space: nowrap; }
+.product-price { font-weight: 700; white-space: nowrap; color: var(--primary); }
+.info-row { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+.info-row:last-child { border-bottom: none; }
+.info-row i { color: var(--primary); font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.info-row-label { color: var(--text-muted); font-size: 0.78rem; margin-bottom: 0.15rem; }
+.price-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.875rem; }
+.price-row.total { border-top: 1px solid var(--border); padding-top: 0.85rem; margin-top: 0.25rem; }
+.price-row.total .price-amount { font-size: 1.25rem; font-weight: 900; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+@@media (max-width: 900px) { .order-detail-grid { grid-template-columns: 1fr; } }
+</style>
+}
+
+<div class="page-header">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb">
+            <a href="/">Trang chủ</a><span class="breadcrumb-sep">›</span>
+            <a href="/tai-khoan">Tài khoản</a><span class="breadcrumb-sep">›</span>
+            <a href="/tai-khoan/don-hang">Đơn hàng</a><span class="breadcrumb-sep">›</span>
+            <span>#@Model.Id</span>
+        </nav>
+        <h1 class="page-title">Chi Tiết <span>Đơn Hàng</span></h1>
+    </div>
+</div>
+
+<div class="container order-detail-layout">
+
+    @if (TempData["Success"] != null)
+    {
+        <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.875rem;margin-bottom:1rem">
+            @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.875rem;margin-bottom:1rem">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- Order Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div>
+            <div style="font-size:1.1rem;font-weight:700;">Đơn hàng <span style="color:var(--primary)">#@Model.Id</span></div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.25rem;">
+                Đặt lúc @Model.CreatedAt.ToLocalTime().ToString("HH:mm, dd/MM/yyyy")
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="order-status-badge" style="background:rgba(255,255,255,0.05);color:@statusColor;border:1px solid @statusColor+33">
+                @statusText
+            </span>
+            <a href="/tai-khoan/don-hang" class="btn btn-secondary btn-sm">← Quay lại</a>
+        </div>
+    </div>
+
+    <div class="order-detail-grid">
+        <!-- Main -->
+        <div>
+            <!-- Progress Tracking -->
+            <div class="od-card">
+                <div class="od-card-header">
+                    <div class="od-card-title"><i class='bx bx-map-pin'></i> Trạng thái đơn hàng</div>
+                </div>
+                <div class="od-card-body">
+                    @{
+                        var statuses = new[] {
+                            (TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi, "📋", "Chờ duyệt", "Đơn hàng đã được tiếp nhận"),
+                            (TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan, "✅", "Đã xác nhận", "Cửa hàng đã xác nhận đơn"),
+                            (TamThaiTuSport.Models.Domain.OrderStatus.DangGiao, "🚚", "Đang giao", "Sản phẩm đang trên đường giao"),
+                            (TamThaiTuSport.Models.Domain.OrderStatus.DaGiao, "🎉", "Đã giao", "Giao hàng thành công"),
+                        };
+                    }
+                    <div class="order-track">
+                        @foreach (var (s, icon, name, desc) in statuses)
+                        {
+                            bool isDone = (int)Model.Status >= (int)s && Model.Status != TamThaiTuSport.Models.Domain.OrderStatus.DaHuy;
+                            bool isActive = Model.Status == s;
+                            <div class="order-track-item">
+                                <div class="order-track-dot @(isDone ? "done" : isActive ? "active" : "pending")">
+                                    @icon
+                                </div>
+                                <div class="order-track-info">
+                                    <div class="order-track-name" style="@(isDone ? "color:var(--primary)" : isActive ? "" : "color:var(--text-muted)")">@name</div>
+                                    <div class="order-track-desc">@desc</div>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.Status == TamThaiTuSport.Models.Domain.OrderStatus.DaHuy)
+                        {
+                            <div class="order-track-item">
+                                <div class="order-track-dot" style="background:rgba(239,68,68,0.1)">❌</div>
+                                <div class="order-track-info">
+                                    <div class="order-track-name" style="color:#ef4444">Đã hủy</div>
+                                    <div class="order-track-desc">Đơn hàng đã bị hủy</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.TrackingCode))
+                    {
+                        <div style="margin-top:1rem;padding:0.75rem;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:0.875rem;">
+                            🚚 Mã vận đơn: <strong>@Model.TrackingCode</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="od-card">
+                <div class="od-card-header">
+                    <div class="od-card-title"><i class='bx bx-shopping-bag'></i> Sản phẩm đã đặt</div>
+                    <span style="font-size:0.82rem;color:var(--text-muted)">@Model.OrderDetails.Count sản phẩm</span>
+                </div>
+                <div class="od-card-body">
+                    @foreach (var d in Model.OrderDetails)
+                    {
+                        <div class="product-row">
+                            <div class="product-thumb">
+                                @if (d.Product?.Image != null)
+                                {
+                                    <img src="/uploads/products/@d.Product.Image" alt="@d.Product?.Name" />
+                                }
+                                else { <span>📦</span> }
+                            </div>
+                            <div class="product-info">
+                                <div class="product-name">@(d.Product?.Name ?? "Sản phẩm")</div>
+                                <div class="product-meta">
+                                    @if (!string.IsNullOrEmpty(d.Size)) { <span>Size: @d.Size</span> }
+                                    @if (!string.IsNullOrEmpty(d.Color)) { <span style="margin-left:0.5rem">Màu: @d.Color</span> }
+                                </div>
+                            </div>
+                            <div class="product-qty">×@d.Quantity</div>
+                            <div class="product-price">@d.TotalPrice.ToString("N0")₫</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Cancel Action -->
+            @if (Model.Status == TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi)
+            {
+                <div style="padding:1rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);font-size:0.875rem;">
+                    <p style="color:var(--text-muted);margin-bottom:0.75rem">⚠️ Bạn có thể hủy đơn hàng khi đơn đang ở trạng thái "Chờ duyệt".</p>
+                    <form asp-controller="Profile" asp-action="CancelOrder" asp-route-id="@Model.Id" method="post"
+                          onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #@Model.Id không?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;padding:0.6rem 1.25rem;border-radius:8px;cursor:pointer;font-size:0.875rem;font-weight:600;">
+                            <i class='bx bx-x'></i> Hủy đơn hàng
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Order Summary -->
+            <div class="od-card">
+                <div class="od-card-header">
+                    <div class="od-card-title"><i class='bx bx-receipt'></i> Tóm tắt đơn hàng</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="price-row">
+                        <span style="color:var(--text-muted)">Tạm tính:</span>
+                        <span>@Model.TotalAmount.ToString("N0")₫</span>
+                    </div>
+                    <div class="price-row">
+                        <span style="color:var(--text-muted)">Phí vận chuyển:</span>
+                        <span>@(Model.ShippingFee == 0 ? "Miễn phí" : Model.ShippingFee.ToString("N0") + "₫")</span>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="price-row">
+                            <span style="color:var(--text-muted)">Giảm giá:</span>
+                            <span style="color:#22c55e">-@Model.DiscountAmount.ToString("N0")₫</span>
+                        </div>
+                    }
+                    <div class="price-row total">
+                        <span>Tổng cộng:</span>
+                        <span class="price-amount">@Model.FinalTotal.ToString("N0")₫</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Info -->
+            <div class="od-card" style="margin-top:1rem;">
+                <div class="od-card-header">
+                    <div class="od-card-title"><i class='bx bx-map'></i> Giao hàng</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="info-row">
+                        <i class='bx bx-user'></i>
+                        <div>
+                            <div class="info-row-label">Người nhận</div>
+                            <div>@Model.CustomerName</div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                    {
+                        <div class="info-row">
+                            <i class='bx bx-phone'></i>
+                            <div>
+                                <div class="info-row-label">Điện thoại</div>
+                                <div>@Model.CustomerPhone</div>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ShippingAddress))
+                    {
+                        <div class="info-row">
+                            <i class='bx bx-map-pin'></i>
+                            <div>
+                                <div class="info-row-label">Địa chỉ</div>
+                                <div>@Model.ShippingAddress</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="od-card" style="margin-top:1rem;">
+                <div class="od-card-header">
+                    <div class="od-card-title"><i class='bx bx-credit-card'></i> Thanh toán</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="info-row">
+                        <i class='bx bx-wallet'></i>
+                        <div>
+                            <div class="info-row-label">Hình thức</div>
+                            <div>@Model.PaymentMethod</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <i class='bx bx-check-circle'></i>
+                        <div>
+                            <div class="info-row-label">Trạng thái</div>
+                            <div style="color: @(Model.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "#22c55e" : "#f59e0b")">
+                                @(Model.PaymentStatus switch {
+                                    TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan => "✅ Đã thanh toán",
+                                    _ => "💳 Chưa / Đang xử lý"
+                                })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Note))
+            {
+                <div class="od-card" style="margin-top:1rem;">
+                    <div class="od-card-header">
+                        <div class="od-card-title"><i class='bx bx-note'></i> Ghi chú</div>
+                    </div>
+                    <div class="od-card-body">
+                        <p style="color:var(--text-muted);font-size:0.875rem;">@Model.Note</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

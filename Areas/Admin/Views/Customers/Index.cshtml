@@ -1,0 +1,148 @@
+@model List<TamThaiTuSport.Models.Domain.AppUser>
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    int total = ViewBag.Total ?? 0;
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 20;
+    var orderCounts = ViewBag.OrderCounts as Dictionary<string, dynamic> ?? new();
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Quản lý khách hàng</h1>
+        <p class="dash-subtitle">Tổng cộng <strong>@total</strong> tài khoản</p>
+    </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="dash-filter-bar">
+    <form method="get" class="dash-filter-form">
+        <div class="dash-search-wrap">
+            <i class='bx bx-search'></i>
+            <input type="text" name="q" value="@ViewBag.SearchQuery" class="dash-search-input"
+                   placeholder="Tìm email, tên, số điện thoại..." />
+        </div>
+        <select name="isActive" class="admin-select" style="width:160px;">
+            <option value="">Tất cả trạng thái</option>
+            @if (ViewBag.IsActive?.ToString() == "True") {
+                <option value="true" selected>Đang hoạt động</option>
+            } else {
+                <option value="true">Đang hoạt động</option>
+            }
+            @if (ViewBag.IsActive?.ToString() == "False") {
+                <option value="false" selected>Đã bị khóa</option>
+            } else {
+                <option value="false">Đã bị khóa</option>
+            }
+        </select>
+        <button type="submit" class="admin-btn primary">Tìm kiếm</button>
+        <a href="?" class="admin-btn secondary">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;">
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Khách hàng</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Điểm thưởng</th>
+                    <th>Đơn hàng</th>
+                    <th>Tổng chi</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    var hasOrders = ViewBag.OrderCounts is Dictionary<string, dynamic> dict && dict.ContainsKey(user.Id);
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.75rem;">
+                                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:0.9rem;flex-shrink:0;">
+                                    @((user.FullName ?? user.Email ?? "?").Substring(0, 1).ToUpper())
+                                </div>
+                                <div>
+                                    <div class="font-medium">@(user.FullName ?? "(Chưa có tên)")</div>
+                                    <small class="text-muted">Đăng nhập lần cuối: @(user.LastLogin?.ToLocalTime().ToString("dd/MM HH:mm") ?? "–")</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">@user.Email</td>
+                        <td class="text-muted">@(user.PhoneNumber ?? "–")</td>
+                        <td>
+                            @if (user.LoyaltyPointsTotal > 0)
+                            {
+                                <span class="admin-badge warning">⭐ @user.LoyaltyPointsTotal</span>
+                            }
+                            else { <span class="text-muted">0</span> }
+                        </td>
+                        <td>
+                            @{
+                                dynamic? orderData = null;
+                                if (ViewBag.OrderCounts is IDictionary<string, object> oc && oc.TryGetValue(user.Id, out var od))
+                                    orderData = od;
+                            }
+                            @if (orderData != null)
+                            {
+                                <span class="admin-badge info">@orderData.Count đơn</span>
+                            }
+                            else { <span class="text-muted">0</span> }
+                        </td>
+                        <td>
+                            @if (orderData != null)
+                            {
+                                <span style="color:#4ade80;font-weight:600;">@((decimal)orderData.Total).ToString("N0")₫</span>
+                            }
+                            else { <span class="text-muted">–</span> }
+                        </td>
+                        <td class="text-muted">@user.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="admin-badge @(user.IsActive ? "success" : "danger")">
+                                @(user.IsActive ? "Hoạt động" : "Bị khóa")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-area="Admin" asp-controller="Customers" asp-action="Detail"
+                                   asp-route-id="@user.Id" class="admin-btn-sm primary" title="Chi tiết">
+                                    <i class='bx bx-show'></i>
+                                </a>
+                                <form asp-area="Admin" asp-controller="Customers" asp-action="Toggle" method="post" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    <button type="submit" class="admin-btn-sm @(user.IsActive ? "danger" : "success")"
+                                            title="@(user.IsActive ? "Khóa tài khoản" : "Mở khóa")"
+                                            onclick="return confirm('@(user.IsActive ? "Khóa tài khoản này?" : "Mở khóa tài khoản?")')">
+                                        <i class='bx @(user.IsActive ? "bx-lock" : "bx-lock-open")'></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="9" class="dash-empty">Không tìm thấy khách hàng nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (total > pageSize)
+    {
+        int totalPages = (int)Math.Ceiling((double)total / pageSize);
+        <div class="dash-pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a href="?page=@i&q=@ViewBag.SearchQuery"
+                   class="dash-page-btn @(i == page ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+</div>

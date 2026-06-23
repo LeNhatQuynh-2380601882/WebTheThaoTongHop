@@ -1,0 +1,253 @@
+@{
+    ViewData["Title"] = "Thống kê";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
+    var totalRevenue = (decimal)(ViewBag.TotalRevenue ?? 0);
+    var totalOrders = (int)(ViewBag.TotalOrders ?? 0);
+    var totalCustomers = (int)(ViewBag.TotalCustomers ?? 0);
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Thống kê tổng quan</h1>
+        <p class="dash-subtitle">Tổng hợp hiệu suất kinh doanh của cửa hàng</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Reports" asp-action="Revenue" class="admin-btn primary">
+            <i class='bx bx-bar-chart-alt-2'></i> Báo cáo doanh thu
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="dash-stats-grid" style="margin-bottom:1.5rem;">
+    <div class="dash-stat-card primary">
+        <div class="dash-stat-icon"><i class='bx bx-money'></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-label">Tổng doanh thu</div>
+            <div class="dash-stat-value">@totalRevenue.ToString("N0")₫</div>
+            <div class="dash-stat-trend up"><i class='bx bx-trending-up'></i> Tất cả thời gian</div>
+        </div>
+    </div>
+    <div class="dash-stat-card warning">
+        <div class="dash-stat-icon"><i class='bx bx-package'></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-label">Tổng đơn hàng</div>
+            <div class="dash-stat-value">@totalOrders</div>
+            <div class="dash-stat-trend">
+                <i class='bx bx-check'></i> Bao gồm mọi trạng thái
+            </div>
+        </div>
+    </div>
+    <div class="dash-stat-card info">
+        <div class="dash-stat-icon"><i class='bx bx-user-circle'></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-label">Tổng khách hàng</div>
+            <div class="dash-stat-value">@totalCustomers</div>
+            <div class="dash-stat-trend up"><i class='bx bx-group'></i> Tài khoản đã đăng ký</div>
+        </div>
+    </div>
+    <div class="dash-stat-card success">
+        <div class="dash-stat-icon"><i class='bx bx-dollar'></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-label">Giá trị đơn TB</div>
+            <div class="dash-stat-value">@(totalOrders > 0 ? (totalRevenue / totalOrders).ToString("N0") : "0")₫</div>
+            <div class="dash-stat-trend up"><i class='bx bx-trending-up'></i> Trên mỗi đơn hàng</div>
+        </div>
+    </div>
+</div>
+
+<div class="dash-grid-2">
+    <!-- Revenue 12 months chart -->
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h2 class="dash-card-title"><i class='bx bx-bar-chart-alt-2'></i> Doanh thu 12 tháng</h2>
+        </div>
+        <div class="dash-chart-container">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Orders by status pie -->
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h2 class="dash-card-title"><i class='bx bx-pie-chart-alt-2'></i> Đơn hàng theo trạng thái</h2>
+        </div>
+        <div class="dash-chart-container">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dash-grid-2" style="margin-top:1.5rem;">
+    <!-- Top selling products -->
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h2 class="dash-card-title"><i class='bx bx-trophy'></i> Top sản phẩm bán chạy</h2>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">#</th>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var top = ViewBag.TopSelling as System.Collections.IEnumerable;
+                        int rank = 1;
+                    }
+                    @if (top != null)
+                    {
+                        foreach (dynamic item in top)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="dash-top-rank @(rank == 1 ? "gold" : rank == 2 ? "silver" : rank == 3 ? "bronze" : "")">@rank</div>
+                                </td>
+                                <td>
+                                    <div class="font-medium" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@item.ProductName</div>
+                                </td>
+                                <td><span class="admin-badge info">@item.TotalQty</span></td>
+                                <td><strong>@((decimal)item.TotalRevenue).ToString("N0")₫</strong></td>
+                            </tr>
+                            rank++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Category revenue chart -->
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h2 class="dash-card-title"><i class='bx bx-category'></i> Doanh thu theo danh mục</h2>
+        </div>
+        <div class="dash-chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const chartDefaults = {
+        color: '#94a3b8',
+        gridColor: 'rgba(255,255,255,0.05)'
+    };
+
+    // Revenue 12 months
+    @{
+        var months12 = ViewBag.Last12Months as System.Collections.IEnumerable;
+        var monthLabels = new List<string>();
+        var monthRevs = new List<string>();
+        if (months12 != null) {
+            foreach (dynamic m in months12) {
+                monthLabels.Add($"\"{m.Label}\"");
+                monthRevs.Add(((decimal)m.Revenue).ToString());
+            }
+        }
+    }
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: [@Html.Raw(string.Join(",", monthLabels))],
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: [@string.Join(",", monthRevs)],
+                backgroundColor: 'rgba(249,115,22,0.7)',
+                borderColor: '#f97316',
+                borderWidth: 2,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: chartDefaults.gridColor }, ticks: { color: chartDefaults.color, callback: v => (v/1000000).toFixed(1)+'M' } },
+                x: { grid: { display: false }, ticks: { color: chartDefaults.color } }
+            }
+        }
+    });
+
+    // Status pie chart
+    @{
+        var statusGroups = ViewBag.StatusGroups as System.Collections.IEnumerable;
+        var statusLabels = new List<string>();
+        var statusCounts = new List<string>();
+        var statusColors = new Dictionary<string, string> {
+            {"ChoPhanHoi","#f59e0b"}, {"DaXacNhan","#60a5fa"}, {"DangGiao","#a78bfa"},
+            {"DaGiao","#4ade80"}, {"DaHuy","#f87171"}
+        };
+        var statusNames = new Dictionary<string, string> {
+            {"ChoPhanHoi","Chờ duyệt"}, {"DaXacNhan","Xác nhận"}, {"DangGiao","Đang giao"},
+            {"DaGiao","Đã giao"}, {"DaHuy","Đã hủy"}
+        };
+        var colorList = new List<string>();
+        if (statusGroups != null) {
+            foreach (dynamic sg in statusGroups) {
+                string sKey = sg.Status.ToString();
+                statusLabels.Add($"\"{(statusNames.TryGetValue(sKey, out var sn) ? sn : sKey)}\"");
+                statusCounts.Add(sg.Count.ToString());
+                colorList.Add($"\"{(statusColors.TryGetValue(sKey, out var sc) ? sc : "#94a3b8")}\"");
+            }
+        }
+    }
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [@Html.Raw(string.Join(",", statusLabels))],
+            datasets: [{
+                data: [@string.Join(",", statusCounts)],
+                backgroundColor: [@Html.Raw(string.Join(",", colorList))],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', padding: 16 } } }
+        }
+    });
+
+    // Category revenue
+    @{
+        var catRevs = ViewBag.CategoryRevenue as System.Collections.IEnumerable;
+        var catLabels = new List<string>();
+        var catRevValues = new List<string>();
+        if (catRevs != null) {
+            foreach (dynamic cr in catRevs) {
+                catLabels.Add($"\"{cr.Category}\"");
+                catRevValues.Add(((decimal)cr.Revenue).ToString());
+            }
+        }
+    }
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        indexAxis: 'y',
+        data: {
+            labels: [@Html.Raw(string.Join(",", catLabels))],
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: [@string.Join(",", catRevValues)],
+                backgroundColor: ['rgba(249,115,22,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)',
+                                   'rgba(59,130,246,0.7)','rgba(34,197,94,0.7)','rgba(245,158,11,0.7)'],
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: chartDefaults.gridColor }, ticks: { color: chartDefaults.color, callback: v => (v/1000000).toFixed(1)+'M' } },
+                y: { grid: { display: false }, ticks: { color: chartDefaults.color } }
+            }
+        }
+    });
+</script>
+}

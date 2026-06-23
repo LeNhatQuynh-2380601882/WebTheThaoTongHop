@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Chat - AES-RSA - Zalo/Messenger Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b141a;
+            --sidebar-bg: #111b21;
+            --chat-bg: #0b141a;
+            --panel-bg: #1f2c34;
+            --text-main: #e9edef;
+            --text-muted: #8696a0;
+            --primary: #0084ff; /* Messenger Blue */
+            --zalo-blue: #0068ff;
+            --bubble-self: #005c4b; /* Zalo green-ish dark or blue */
+            --bubble-self-gradient: linear-gradient(135deg, #0084ff, #0056b3);
+            --bubble-other: #202c33;
+            --accent-green: #00e676;
+            --accent-red: #ff3b30;
+            --border-color: #22303c;
+            --input-bg: #2a3942;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Sidebar Style */
+        .sidebar {
+            width: 25%;
+            min-width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(0, 132, 255, 0.2);
+            position: relative;
+        }
+
+        .avatar.other-user {
+            background: linear-gradient(135deg, #f6d365, #fda085);
+        }
+
+        .avatar .status-dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-green);
+            border: 2px solid var(--sidebar-bg);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+
+        .profile-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .online-list-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+            margin-bottom: 5px;
+        }
+
+        .user-item:hover {
+            background-color: var(--input-bg);
+        }
+
+        .user-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Chat Window Style */
+        .chat-window {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background-color: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-room-info h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-room-info p {
+            font-size: 12px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(0, 230, 118, 0.1);
+            color: var(--accent-green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .message-row.self {
+            justify-content: flex-end;
+        }
+
+        .message-row.other {
+            justify-content: flex-start;
+        }
+
+        .message-row.system {
+            justify-content: center;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+
+        .message-bubble:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .message-row.self .message-bubble {
+            background: var(--bubble-self-gradient);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-row.other .message-bubble {
+            background-color: var(--bubble-other);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-sender {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .message-row.system .system-bubble {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .chat-input-area {
+            padding: 15px 20px;
+            background-color: var(--sidebar-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            background: var(--bubble-self-gradient);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Security Control Panel Style */
+        .security-panel {
+            width: 30%;
+            min-width: 320px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .panel-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .security-card {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        }
+
+        .security-card h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .key-box {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0b141a;
+            color: var(--accent-green);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 230, 118, 0.15);
+            margin-top: 5px;
+        }
+
+        .pem-box {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0b141a;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            white-space: pre-wrap;
+        }
+
+        /* Payload visualizer style */
+        .visualizer-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .visualizer-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: rgba(0, 230, 118, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .badge-danger {
+            background-color: rgba(255, 59, 48, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        .visualizer-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+
+        .visualizer-val {
+            font-size: 13px;
+            background-color: #0b141a;
+            padding: 8px 10px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .visualizer-val.hex {
+            font-family: 'Courier New', Courier, monospace;
+            color: #ff9d00;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-style: italic;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        /* Scrollbar custom styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374248;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f5d64;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- Left Sidebar: Online User list -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar">
+                <span id="user-initial">A</span>
+                <div class="status-dot"></div>
+            </div>
+            <div class="profile-info">
+                <h3 id="current-username">{{ username }}</h3>
+                <p>Cổng Flask: {{ encryption_info.get('server_port', 'Local') }}</p>
+            </div>
+        </div>
+        
+        <div class="online-list-section">
+            <h4 class="section-title">Thành viên online</h4>
+            <div id="online-users-list">
+                <!-- User items will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Chat Window -->
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="chat-room-info">
+                <h2>Phòng Chat Secure</h2>
+                <p>● Đang kết nối Socket Server</p>
+            </div>
+            <div class="secure-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Đã mã hóa</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages-container">
+            <!-- Messages will be dynamically rendered here -->
+            <div class="message-row system">
+                <div class="system-bubble">Đang bắt tay thiết lập kênh truyền tin bảo mật...</div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+            <button class="send-btn" id="send-btn">Gửi</button>
+        </div>
+    </div>
+
+    <!-- Right Security Panel -->
+    <div class="security-panel">
+        <div class="panel-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <h2>Bảng mật mã học</h2>
+        </div>
+
+        <!-- Session Key Card -->
+        <div class="security-card">
+            <h3>🔑 Khóa phiên AES-128</h3>
+            <div class="key-box" id="aes-key-display">
+                {{ encryption_info.get('aes_key_hex', 'Chưa tạo') }}
+            </div>
+        </div>
+
+        <!-- RSA Keys Card -->
+        <div class="security-card">
+            <h3>🤖 Cặp khóa RSA (2048-bit)</h3>
+            <div class="visualizer-label">Khóa Công Khai Server (Server RSA Public Key)</div>
+            <div class="pem-box" id="server-pub-key-display">{{ encryption_info.get('server_pub_key', 'Chưa nhận') }}</div>
+            
+            <div class="visualizer-label">Khóa Công Khai Client (My RSA Public Key)</div>
+            <div class="pem-box" id="client-pub-key-display">{{ encryption_info.get('client_pub_key', 'Chưa tạo') }}</div>
+            
+            <div class="visualizer-label">Khóa Bí Mật Client (My RSA Private Key)</div>
+            <div class="pem-box" id="client-priv-key-display">{{ encryption_info.get('client_priv_key', 'Chưa tạo') }}</div>
+        </div>
+
+        <!-- Payload & Integrity Check Visualizer -->
+        <div class="security-card">
+            <div class="visualizer-title">
+                <h3>🔍 Phân tích gói tin</h3>
+                <span class="visualizer-badge badge-success" id="checksum-status" style="display:none;">Toàn vẹn OK</span>
+            </div>
+            
+            <div id="visualizer-content">
+                <div class="no-data" id="visualizer-placeholder">Click vào một tin nhắn để xem phân tích mã hóa & tính toàn vẹn (SHA-256).</div>
+                
+                <div id="visualizer-details" style="display:none;">
+                    <div class="visualizer-label">Người gửi:</div>
+                    <div class="visualizer-val" id="vis-sender">-</div>
+
+                    <div class="visualizer-label">Nội dung giải mã (Plaintext):</div>
+                    <div class="visualizer-val" id="vis-plaintext" style="color:var(--accent-green);">-</div>
+
+                    <div class="visualizer-label">Mã băm gửi kèm (SHA-256 Checksum):</div>
+                    <div class="visualizer-val" id="vis-hash" style="font-family:monospace; font-size:11px;">-</div>
+
+                    <div class="visualizer-label">Payload mã hóa truyền trên Socket (Ciphertext Hex):</div>
+                    <div class="visualizer-val hex" id="vis-hex">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const chatMessagesContainer = document.getElementById('chat-messages-container');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const currentUsername = "{{ username }}";
+    
+    // Set current user initial avatar
+    document.getElementById('user-initial').textContent = currentUsername.charAt(0);
+
+    // Message database locally for clicks
+    const messageDb = {};
+    let messageIdCounter = 0;
+
+    // Connect to Server-Sent Events stream from local Flask server
+    const eventSource = new EventSource('/events');
+
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("SSE Received: ", data);
+
+        if (data.type === 'connection_status') {
+            // Update Security Panel if keys loaded
+            if (data.encryption_info) {
+                document.getElementById('aes-key-display').textContent = data.encryption_info.aes_key_hex || 'Chưa tạo';
+                document.getElementById('server-pub-key-display').textContent = data.encryption_info.server_pub_key || 'Chưa nhận';
+                document.getElementById('client-pub-key-display').textContent = data.encryption_info.client_pub_key || 'Chưa tạo';
+                document.getElementById('client-priv-key-display').textContent = data.encryption_info.client_priv_key || 'Chưa tạo';
+            }
+            if (data.online_users) {
+                updateOnlineUsers(data.online_users);
+            }
+        } 
+        else if (data.type === 'user_list') {
+            updateOnlineUsers(data.users);
+        } 
+        else if (data.type === 'system') {
+            appendSystemMessage(data.content);
+        } 
+        else if (data.type === 'message') {
+            appendUserMessage(data);
+        }
+    };
+
+    function updateOnlineUsers(users) {
+        const container = document.getElementById('online-users-list');
+        container.innerHTML = '';
+        users.forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar other-user';
+            avatar.textContent = user.charAt(0);
+            
+            const dot = document.createElement('div');
+            dot.className = 'status-dot';
+            avatar.appendChild(dot);
+
+            const name = document.createElement('div');
+            name.className = 'user-item-name';
+            name.textContent = user + (user === currentUsername ? ' (Bạn)' : '');
+
+            item.appendChild(avatar);
+            item.appendChild(name);
+            container.appendChild(item);
+        });
+    }
+
+    function appendSystemMessage(content) {
+        const row = document.createElement('div');
+        row.className = 'message-row system';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'system-bubble';
+        bubble.textContent = content;
+        
+        row.appendChild(bubble);
+        chatMessagesContainer.appendChild(row);
+        scrollToBottom();
+    }
+
+    function appendUserMessage(msgData) {
+        const isSelf = msgData.sender === currentUsername;
+        const msgId = 'msg-' + (++messageIdCounter);
+        
+        // Save to DB
+        messageDb[msgId] = msgData;
+
+        const row = document.createElement('div');
+        row.className = `message-row ${isSelf ? 'self' : 'other'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.id = msgId;
+        bubble.setAttribute('onclick', `inspectMessage('${msgId}')`);
+
+        // If other sender, display name
+        if (!isSelf) {
+            const senderName = document.createElement('div');
+            senderName.className = 'message-sender';
+            senderName.textContent = msgData.sender;
+            bubble.appendChild(senderName);
+        }
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = msgData.content;
+        bubble.appendChild(textSpan);
+
+        row.appendChild(bubble);
+        chatMessagesContainer.appendChild(row);
+        scrollToBottom();
+
+        // Auto inspect latest message in panel
+        inspectMessage(msgId);
+    }
+
+    function inspectMessage(msgId) {
+        const msgData = messageDb[msgId];
+        if (!msgData) return;
+
+        // Visual feedback on selected bubble
+        document.querySelectorAll('.message-bubble').forEach(b => {
+            b.style.border = 'none';
+        });
+        const activeBubble = document.getElementById(msgId);
+        if (activeBubble) {
+            activeBubble.style.border = '2px solid var(--primary)';
+        }
+
+        document.getElementById('visualizer-placeholder').style.display = 'none';
+        document.getElementById('visualizer-details').style.display = 'block';
+
+        document.getElementById('vis-sender').textContent = msgData.sender;
+        document.getElementById('vis-plaintext').textContent = msgData.content;
+        document.getElementById('vis-hash').textContent = msgData.hash || 'N/A';
+        document.getElementById('vis-hex').textContent = msgData.raw_hex || 'N/A';
+
+        // Checksum verification visual status
+        const badge = document.getElementById('checksum-status');
+        badge.style.display = 'inline-block';
+        if (msgData.integrity_valid) {
+            badge.textContent = 'Toàn vẹn: OK';
+            badge.className = 'visualizer-badge badge-success';
+        } else {
+            badge.textContent = 'Bị sửa đổi! (Error)';
+            badge.className = 'visualizer-badge badge-danger';
+        }
+    }
+
+    function scrollToBottom() {
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    // Send logic
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        messageInput.value = '';
+
+        fetch('/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: text })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== 'ok') {
+                console.error("Failed to send message: ", data.message);
+                appendSystemMessage("Lỗi khi gửi tin nhắn.");
+            }
+        })
+        .catch(err => {
+            console.error("Error sending message: ", err);
+            appendSystemMessage("Lỗi mạng khi gửi tin nhắn.");
+        });
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>

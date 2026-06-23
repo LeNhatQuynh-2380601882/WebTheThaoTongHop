@@ -1,0 +1,533 @@
+@model TamThaiTuSport.Models.ViewModels.ProductDetailViewModel
+@{
+    var p = Model.Product;
+    ViewData["Title"] = p.Name;
+    ViewData["Description"] = p.MetaDescription ?? p.Description?.Substring(0, Math.Min(155, p.Description?.Length ?? 0));
+    var sizeList = p.SizeList;
+    var colorList = p.ColorList;
+    var approvedReviews = p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/products.css" asp-append-version="true" />
+    <style>
+        .option-selected-val {
+            color: var(--primary) !important;
+            background: rgba(249, 115, 22, 0.1) !important;
+            padding: 0.15rem 0.6rem !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            margin-left: 0.4rem !important;
+            border: 1px solid rgba(249, 115, 22, 0.25) !important;
+            display: inline-block !important;
+            text-transform: uppercase;
+            animation: pulse-badge 0.3s ease;
+        }
+        @@keyframes pulse-badge {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+}
+
+<!-- PAGE HEADER / BREADCRUMB -->
+<div class="page-header" style="padding:1.5rem 0">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="breadcrumb-sep">›</span>
+            <a href="/san-pham">Sản phẩm</a>
+            @if (p.Category != null)
+            {
+                <span class="breadcrumb-sep">›</span>
+                <a href="/san-pham?category=@p.Category.Slug">@p.Category.Name</a>
+            }
+            <span class="breadcrumb-sep">›</span>
+            <span>@p.Name</span>
+        </nav>
+    </div>
+</div>
+
+<div class="container">
+    <div class="product-detail">
+        <div class="product-detail-grid">
+
+            <!-- ══════════ GALLERY ══════════ -->
+            <div class="product-gallery">
+                <div class="product-main-image" id="mainImage" role="img" aria-label="@p.Name">
+                    @if (!string.IsNullOrEmpty(p.Image))
+                    {
+                        <img src="/uploads/products/@p.Image" alt="@p.Name" id="mainImg" />
+                    }
+                    else
+                    {
+                        <span style="font-size:8rem">@(p.Category?.IconClass ?? "👟")</span>
+                    }
+                </div>
+
+                <!-- Stock indicator -->
+                <div style="display:flex;align-items:center;gap:1rem;margin-top:1rem;padding:0.85rem 1.25rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius)">
+                    @if (p.Stock > 10)
+                    {
+                        <span style="color:#22c55e;font-size:1rem">●</span>
+                        <span style="font-size:0.85rem;color:var(--text-secondary)">Còn hàng — <strong>@p.Stock sản phẩm</strong> trong kho</span>
+                    }
+                    else if (p.Stock > 0)
+                    {
+                        <span style="color:#f59e0b;font-size:1rem">●</span>
+                        <span style="font-size:0.85rem;color:var(--text-secondary)">Sắp hết hàng — Chỉ còn <strong>@p.Stock sản phẩm</strong></span>
+                    }
+                    else
+                    {
+                        <span style="color:#ef4444;font-size:1rem">●</span>
+                        <span style="font-size:0.85rem;color:var(--text-secondary)">Hết hàng</span>
+                    }
+                </div>
+            </div>
+
+            <!-- ══════════ PRODUCT INFO ══════════ -->
+            <div class="product-info">
+                @if (p.Category != null)
+                {
+                    <a href="/san-pham?category=@p.Category.Slug" class="product-category-link">
+                        @p.Category.IconClass @p.Category.Name
+                    </a>
+                }
+
+                <h1 class="product-detail-name">@p.Name</h1>
+
+                <div class="product-meta-row">
+                    <div class="product-rating-display">
+                        <div class="stars" aria-label="@Model.AverageRating.ToString("F1") sao">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Floor(Model.AverageRating))
+                                { <span style="color:#fbbf24">★</span> }
+                                else
+                                { <span style="color:var(--border)">★</span> }
+                            }
+                        </div>
+                        <span style="font-size:0.82rem;color:var(--text-muted)">
+                            @Model.AverageRating.ToString("F1") (@Model.ReviewCount đánh giá)
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(p.Brand))
+                    {
+                        <div>
+                            <span style="font-size:0.78rem;color:var(--text-muted)">Thương hiệu:</span>
+                            <strong style="font-size:0.85rem;color:var(--primary);margin-left:0.3rem">@p.Brand</strong>
+                        </div>
+                    }
+                    <div>
+                        <span style="font-size:0.78rem;color:var(--text-muted)">Đã xem:</span>
+                        <strong style="font-size:0.85rem;margin-left:0.3rem">@p.ViewsCount</strong>
+                    </div>
+                </div>
+
+                <!-- Price -->
+                <div class="product-detail-price">
+                    <span class="detail-price-current">@p.FinalPrice.ToString("N0")₫</span>
+                    @if (p.DiscountPercent > 0)
+                    {
+                        <span class="detail-price-original">@p.Price.ToString("N0")₫</span>
+                        <span class="detail-price-badge">-@p.DiscountPercent%</span>
+                    }
+                </div>
+
+                <!-- Badges -->
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem">
+                    @if (p.IsNew) { <span class="badge badge-new">✨ Hàng mới</span> }
+                    @if (p.DiscountPercent > 0) { <span class="badge badge-sale">🔥 Đang giảm giá</span> }
+                    @if (p.Stock < 10 && p.Stock > 0) { <span class="badge" style="background:#f59e0b;color:white">⏰ Sắp hết</span> }
+                </div>
+
+                <!-- SIZE PICKER -->
+                @if (sizeList.Any())
+                {
+                    <div class="option-group">
+                        <div class="option-group-label">
+                            <span>Size: <strong id="selectedSize">Chọn size</strong></span>
+                        </div>
+                        <div class="option-pills" role="group" aria-label="Chọn size">
+                            @foreach (var size in sizeList)
+                            {
+                                <button type="button"
+                                        class="option-pill"
+                                        data-value="@size"
+                                        onclick="selectSize(this)"
+                                        aria-pressed="false">
+                                    @size
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- COLOR PICKER -->
+                @if (colorList.Any())
+                {
+                    <div class="option-group">
+                        <div class="option-group-label">
+                            Màu sắc: <strong id="selectedColor">Chọn màu</strong>
+                        </div>
+                        <div class="option-pills" role="group" aria-label="Chọn màu">
+                            @foreach (var color in colorList)
+                            {
+                                <button type="button"
+                                        class="option-pill"
+                                        data-value="@color"
+                                        onclick="selectColor(this)"
+                                        aria-pressed="false">
+                                    @color
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- QUANTITY & ADD TO CART -->
+                <div style="margin-bottom:1.25rem">
+                    <div class="option-group-label" style="margin-bottom:0.75rem">Số lượng</div>
+                    <div class="add-to-cart-section">
+                        <div class="qty-control-large">
+                            <button class="qty-btn-large" onclick="changeQty(-1)" aria-label="Giảm">−</button>
+                            <span class="qty-value-large" id="qtyValue">1</span>
+                            <button class="qty-btn-large" onclick="changeQty(1)" aria-label="Tăng">+</button>
+                        </div>
+                        <button class="btn-add-cart-large"
+                                id="addToCartBtn"
+                                onclick="handleAddToCart()"
+                                @(p.Stock == 0 ? "disabled" : "")
+                                aria-label="Thêm @p.Name vào giỏ hàng">
+                            <i class='bx bx-cart-add'></i>
+                            @(p.Stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng")
+                        </button>
+                        <button class="btn-wishlist-large"
+                                data-wishlist-id="@p.Id"
+                                onclick="Wishlist.toggle('@p.Id', '@p.Name')"
+                                aria-pressed="false"
+                                aria-label="Thêm vào yêu thích">
+                            <i class='bx bx-heart'></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tags -->
+                @if (!string.IsNullOrEmpty(p.Tags))
+                {
+                    <div class="product-info-tags">
+                        @foreach (var tag in p.Tags.Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrEmpty(t)))
+                        {
+                            <a href="/san-pham?q=@Uri.EscapeDataString(tag)" class="tag">@tag</a>
+                        }
+                    </div>
+                }
+
+                <!-- Features / Trust signals -->
+                <div class="product-features">
+                    <div class="product-feature"><span class="product-feature-icon">✅</span> Hàng chính hãng 100% — Cam kết từ thương hiệu</div>
+                    <div class="product-feature"><span class="product-feature-icon">🚚</span> Miễn phí giao hàng cho đơn từ 500.000₫</div>
+                    <div class="product-feature"><span class="product-feature-icon">↩️</span> Đổi trả trong 30 ngày — Miễn phí, không cần lý do</div>
+                    <div class="product-feature"><span class="product-feature-icon">🔒</span> Thanh toán an toàn — COD, MoMo, ZaloPay, VNPay</div>
+                    <div class="product-feature"><span class="product-feature-icon">💬</span> Hỗ trợ 24/7 qua hotline 1800 1234</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ DESCRIPTION & REVIEWS ══════════ -->
+        <div style="margin-top:3rem">
+            <!-- Tabs -->
+            <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:2rem">
+                <button class="tab-btn active" onclick="switchTab('desc', this)" id="tabDesc"
+                        style="padding:0.85rem 1.5rem;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--primary);font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.2s">
+                    📋 Mô tả sản phẩm
+                </button>
+                <button class="tab-btn" onclick="switchTab('reviews', this)" id="tabReviews"
+                        style="padding:0.85rem 1.5rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-weight:500;font-size:0.9rem;cursor:pointer;transition:all 0.2s">
+                    ⭐ Đánh giá (@approvedReviews.Count)
+                </button>
+            </div>
+
+            <!-- Description tab -->
+            <div id="tab-desc">
+                @if (!string.IsNullOrEmpty(p.Description))
+                {
+                    <div style="font-size:0.95rem;color:var(--text-secondary);line-height:1.8;max-width:800px">
+                        @Html.Raw(p.Description.Replace("\n", "<br />"))
+                    </div>
+                }
+                else
+                {
+                    <p style="color:var(--text-muted)">Chưa có mô tả cho sản phẩm này.</p>
+                }
+
+                <!-- Product specs -->
+                <div style="margin-top:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem">
+                    @if (!string.IsNullOrEmpty(p.Brand))
+                    {
+                        <div style="display:flex;justify-content:space-between;padding:0.85rem 1rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius)">
+                            <span style="color:var(--text-muted);font-size:0.85rem">Thương hiệu</span>
+                            <strong style="font-size:0.85rem">@p.Brand</strong>
+                        </div>
+                    }
+                    @if (p.Stock > 0)
+                    {
+                        <div style="display:flex;justify-content:space-between;padding:0.85rem 1rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius)">
+                            <span style="color:var(--text-muted);font-size:0.85rem">Tình trạng</span>
+                            <strong style="font-size:0.85rem;color:#22c55e">Còn hàng (@p.Stock)</strong>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(p.Sizes))
+                    {
+                        <div style="display:flex;justify-content:space-between;padding:0.85rem 1rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius)">
+                            <span style="color:var(--text-muted);font-size:0.85rem">Size có sẵn</span>
+                            <strong style="font-size:0.85rem">@p.Sizes</strong>
+                        </div>
+                    }
+                    @if (p.Category != null)
+                    {
+                        <div style="display:flex;justify-content:space-between;padding:0.85rem 1rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius)">
+                            <span style="color:var(--text-muted);font-size:0.85rem">Danh mục</span>
+                            <strong style="font-size:0.85rem">@p.Category.Name</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Reviews tab -->
+            <div id="tab-reviews" style="display:none">
+                <div class="reviews-section" style="margin-top:0;border-top:none;padding-top:0">
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Đánh giá từ khách hàng</h2>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleReviewForm()" id="writeReviewBtn">
+                                ✏️ Viết đánh giá
+                            </button>
+                        }
+                        else
+                        {
+                            <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-primary btn-sm">
+                                🔐 Đăng nhập để đánh giá
+                            </a>
+                        }
+                    </div>
+
+                    <!-- Rating summary -->
+                    @if (approvedReviews.Any())
+                    {
+                        <div class="avg-rating" style="margin-bottom:2rem;display:inline-block">
+                            <div class="avg-rating-value">@Model.AverageRating.ToString("F1")</div>
+                            <div class="avg-rating-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <span>@(i <= Math.Round(Model.AverageRating) ? "★" : "☆")</span>
+                                }
+                            </div>
+                            <div class="avg-rating-count">@approvedReviews.Count đánh giá</div>
+                        </div>
+
+                        <div class="review-list" role="list">
+                            @foreach (var review in approvedReviews.Take(5))
+                            {
+                                <div class="review-card" role="listitem">
+                                    <div class="review-header">
+                                        <div class="review-avatar">
+                                            @(review.User?.FullName?.Substring(0, 1).ToUpper() ?? review.User?.Email?.Substring(0, 1).ToUpper() ?? "?")
+                                        </div>
+                                        <div>
+                                            <div class="review-name">@(review.User?.FullName ?? review.User?.Email?.Split('@')[0] ?? "Khách hàng")</div>
+                                            <div class="review-date">@review.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                        </div>
+                                        <div class="review-rating" aria-label="@review.Rating sao">
+                                            @for (int i = 1; i <= review.Rating; i++) { <span>★</span> }
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(review.Comment))
+                                    {
+                                        <p class="review-text">@review.Comment</p>
+                                    }
+                                    @if (review.IsVerifiedPurchase)
+                                    {
+                                        <div class="review-verified">✅ Đã mua tại Tam Thái Tử Sport</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state" style="padding:2rem">
+                            <div class="empty-state-icon">⭐</div>
+                            <div class="empty-state-title">Chưa có đánh giá</div>
+                            <p style="font-size:0.85rem;color:var(--text-muted)">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                        </div>
+                    }
+
+                    <!-- Review form (hidden by default) -->
+                    <div id="reviewForm" style="display:none;margin-top:2rem;padding:1.5rem;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+                        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1.25rem">✏️ Viết đánh giá của bạn</h3>
+                        <form asp-controller="Product" asp-action="AddReview" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@p.Id" />
+                            <div class="form-group">
+                                <label class="form-label">Đánh giá sao</label>
+                                <div style="display:flex;gap:0.5rem;font-size:2rem;cursor:pointer" id="starPicker">
+                                    @for (int i = 1; i <= 5; i++) { <span data-val="@i" onclick="pickStar(@i)" style="color:var(--border);transition:color 0.2s">★</span> }
+                                </div>
+                                <input type="hidden" name="rating" id="ratingInput" value="5" required />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="comment">Nhận xét</label>
+                                <textarea name="comment" id="comment" class="form-control" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ RELATED PRODUCTS ══════════ -->
+        @if (Model.RelatedProducts.Any())
+        {
+            <div style="margin-top:4rem;border-top:1px solid var(--border);padding-top:3rem">
+                <div class="section-header" style="margin-bottom:2rem">
+                    <div class="section-tag">🔗 Gợi ý</div>
+                    <h2 class="section-title">Sản Phẩm <span>Liên Quan</span></h2>
+                </div>
+                <div class="products-grid">
+                    @foreach (var rp in Model.RelatedProducts)
+                    {
+                        <article class="product-card">
+                            <a href="/san-pham/@rp.Slug" class="product-card-image">
+                                @if (!string.IsNullOrEmpty(rp.Image))
+                                { <img src="/uploads/products/@rp.Image" alt="@rp.Name" loading="lazy" /> }
+                                else
+                                { <span style="font-size:3rem;display:flex;align-items:center;justify-content:center;height:100%">@(rp.Category?.IconClass ?? "👟")</span> }
+                                @if (rp.DiscountPercent > 0) { <div class="product-card-badges"><span class="badge badge-sale">-@rp.DiscountPercent%</span></div> }
+                            </a>
+                            <div class="product-card-body">
+                                @if (!string.IsNullOrEmpty(rp.Brand)) { <div class="product-card-brand">@rp.Brand</div> }
+                                <h3 class="product-card-name"><a href="/san-pham/@rp.Slug">@rp.Name</a></h3>
+                                <div class="product-card-price">
+                                    <span class="price-current">@rp.FinalPrice.ToString("N0")₫</span>
+                                    @if (rp.DiscountPercent > 0) { <span class="price-original">@rp.Price.ToString("N0")₫</span> }
+                                </div>
+                                <div class="product-card-footer">
+                                    <button class="btn-add-cart" data-id="@rp.Id" data-name="@rp.Name" data-price="@rp.FinalPrice" data-image="@(rp.Image??"")" onclick="addToCart(this)" aria-label="Thêm vào giỏ">
+                                        <i class='bx bx-cart-add'></i> Thêm giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedSize = null;
+        let selectedColor = null;
+        let qty = 1;
+
+        function selectSize(btn) {
+            document.querySelectorAll('.option-pill[data-value]').forEach(b => {
+                if (b.closest('[aria-label="Chọn size"]')) {
+                    b.classList.remove('selected');
+                    b.setAttribute('aria-pressed', 'false');
+                }
+            });
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+            selectedSize = btn.dataset.value;
+            const label = document.getElementById('selectedSize');
+            label.textContent = selectedSize;
+            label.classList.add('option-selected-val');
+        }
+
+        function selectColor(btn) {
+            document.querySelectorAll('.option-pill[data-value]').forEach(b => {
+                if (b.closest('[aria-label="Chọn màu"]')) {
+                    b.classList.remove('selected');
+                    b.setAttribute('aria-pressed', 'false');
+                }
+            });
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+            selectedColor = btn.dataset.value;
+            const label = document.getElementById('selectedColor');
+            label.textContent = selectedColor;
+            label.classList.add('option-selected-val');
+        }
+
+        function changeQty(delta) {
+            qty = Math.max(1, Math.min(99, qty + delta));
+            document.getElementById('qtyValue').textContent = qty;
+        }
+
+        function handleAddToCart() {
+            const hasSizes = @(sizeList.Any() ? "true" : "false");
+            const hasColors = @(colorList.Any() ? "true" : "false");
+
+            if (hasSizes && !selectedSize) {
+                Toast.warning('⚠️ Vui lòng chọn size trước khi thêm vào giỏ');
+                document.querySelector('[aria-label="Chọn size"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            if (hasColors && !selectedColor) {
+                Toast.warning('⚠️ Vui lòng chọn màu sắc trước khi thêm vào giỏ');
+                return;
+            }
+
+            Cart.add({
+                id: '@p.Id',
+                name: '@p.Name.Replace("'", "\\'")',
+                price: @((long)p.FinalPrice),
+                image: '@(p.Image ?? "")',
+                size: selectedSize,
+                color: selectedColor,
+                qty: qty
+            });
+        }
+
+        function switchTab(tab, btn) {
+            document.getElementById('tab-desc').style.display = tab === 'desc' ? 'block' : 'none';
+            document.getElementById('tab-reviews').style.display = tab === 'reviews' ? 'block' : 'none';
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.style.borderBottom = '2px solid transparent';
+                b.style.color = 'var(--text-muted)';
+                b.style.fontWeight = '500';
+            });
+            btn.style.borderBottom = '2px solid var(--primary)';
+            btn.style.color = 'var(--primary)';
+            btn.style.fontWeight = '600';
+        }
+
+        function toggleReviewForm() {
+            const form = document.getElementById('reviewForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function pickStar(val) {
+            document.getElementById('ratingInput').value = val;
+            document.querySelectorAll('#starPicker span').forEach((s, i) => {
+                s.style.color = i < val ? '#fbbf24' : 'var(--border)';
+            });
+        }
+        // Init star picker at 5
+        pickStar(5);
+
+        // Pre-select first size and color on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstSize = document.querySelector('[aria-label="Chọn size"] .option-pill');
+            if (firstSize) firstSize.click();
+
+            const firstColor = document.querySelector('[aria-label="Chọn màu"] .option-pill');
+            if (firstColor) firstColor.click();
+        });
+    </script>
+}

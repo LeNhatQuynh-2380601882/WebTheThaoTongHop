@@ -1,0 +1,143 @@
+@model List<TamThaiTuSport.Models.Domain.Order>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    int total = ViewBag.Total ?? 0;
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 20;
+    string? currentStatus = ViewBag.CurrentStatus;
+    dynamic counts = ViewBag.Counts;
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Quản lý đơn hàng</h1>
+        <p class="dash-subtitle">Tổng cộng <strong>@total</strong> đơn hàng</p>
+    </div>
+</div>
+
+<!-- Status Filter Tabs -->
+<div class="admin-tabs">
+    <a href="?status=" class="admin-tab @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
+        Tất cả <span class="admin-tab-count">@counts.All</span>
+    </a>
+    <a href="?status=ChoPhanHoi" class="admin-tab @(currentStatus == "ChoPhanHoi" ? "active" : "")">
+        Chờ duyệt <span class="admin-tab-count warning">@counts.ChoPhanHoi</span>
+    </a>
+    <a href="?status=DaXacNhan" class="admin-tab @(currentStatus == "DaXacNhan" ? "active" : "")">
+        Đã xác nhận <span class="admin-tab-count info">@counts.DaXacNhan</span>
+    </a>
+    <a href="?status=DangGiao" class="admin-tab @(currentStatus == "DangGiao" ? "active" : "")">
+        Đang giao <span class="admin-tab-count primary">@counts.DangGiao</span>
+    </a>
+    <a href="?status=DaGiao" class="admin-tab @(currentStatus == "DaGiao" ? "active" : "")">
+        Đã giao <span class="admin-tab-count success">@counts.DaGiao</span>
+    </a>
+    <a href="?status=DaHuy" class="admin-tab @(currentStatus == "DaHuy" ? "active" : "")">
+        Đã hủy <span class="admin-tab-count danger">@counts.DaHuy</span>
+    </a>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;">
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Khách hàng</th>
+                    <th>Sản phẩm</th>
+                    <th>Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đặt</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    var (statusClass, statusText) = o.Status switch
+                    {
+                        TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => ("warning", "Chờ duyệt"),
+                        TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => ("info", "Xác nhận"),
+                        TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => ("primary", "Đang giao"),
+                        TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => ("success", "Đã giao"),
+                        TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => ("danger", "Đã hủy"),
+                        _ => ("secondary", "Không rõ")
+                    };
+                    <tr>
+                        <td><strong>#@o.Id</strong></td>
+                        <td>
+                            <div class="font-medium">@o.CustomerName</div>
+                            <small class="text-muted">@o.CustomerPhone</small><br/>
+                            <small class="text-muted">@o.CustomerEmail</small>
+                        </td>
+                        <td>
+                            <small>@o.OrderDetails.Count sản phẩm</small>
+                        </td>
+                        <td><strong class="text-primary">@o.FinalTotal.ToString("N0")₫</strong></td>
+                        <td>
+                            <div>@o.PaymentMethod</div>
+                            <span class="admin-badge @(o.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "success" : "warning")">
+                                @(o.PaymentStatus == TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan ? "Đã TT" : "Chưa TT")
+                            </span>
+                        </td>
+                        <td>
+                            <form asp-area="Admin" asp-controller="Orders" asp-action="UpdateStatus" method="post" style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@o.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <select name="status" class="admin-select-sm status-badge-@statusClass" onchange="if(confirm('Xác nhận thay đổi trạng thái đơn hàng #@o.Id?')) this.form.submit(); else { location.reload(); }">
+                                    @foreach (TamThaiTuSport.Models.Domain.OrderStatus s in Enum.GetValues(typeof(TamThaiTuSport.Models.Domain.OrderStatus)))
+                                    {
+                                        var label = s switch
+                                        {
+                                            TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => "Chờ duyệt",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => "Xác nhận",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => "Đang giao",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => "Đã giao",
+                                            TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => "Đã hủy",
+                                            _ => s.ToString()
+                                        };
+                                        if (s == o.Status)
+                                        {
+                                            <option value="@s" selected>@label</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@label</option>
+                                        }
+                                    }
+                                </select>
+                            </form>
+                        </td>
+                        <td class="text-muted">@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Detail" asp-route-id="@o.Id"
+                               class="admin-btn-sm">
+                                <i class='bx bx-show'></i> Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8" class="dash-empty">Không có đơn hàng nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (total > pageSize)
+    {
+        int totalPages = (int)Math.Ceiling((double)total / pageSize);
+        <div class="dash-pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a href="?status=@currentStatus&page=@i"
+                   class="dash-page-btn @(i == page ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+</div>

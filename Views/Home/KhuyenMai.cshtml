@@ -1,0 +1,413 @@
+@model TamThaiTuSport.Models.ViewModels.PromotionsViewModel
+@{
+    ViewData["Title"] = "Chương Trình Khuyến Mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    /* ─── PROMOTIONS HERO ────────────────────────────────── */
+    .promo-hero {
+        position: relative;
+        background: radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 10% 80%, rgba(239, 68, 68, 0.12) 0%, transparent 50%),
+                    var(--bg-dark);
+        padding: 5rem 0 4rem;
+        border-bottom: 1px solid var(--border);
+        text-align: center;
+        overflow: hidden;
+    }
+    .promo-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54 48c-2 0-3 1-4 2v4c0 1-1 2-2 2h-4c-1 0-2-1-2-2v-4c-1-1-2-2-4-2h-4c-2 0-3 1-4 2v4c0 1-1 2-2 2h-4c-1 0-2-1-2-2v-4c-1-1-2-2-4-2H8c-2 0-3 1-4 2v4c0 1-1 2-2 2H0v-4c0-1 1-2 2-2h4c1 0 2-1 2-2v-4c1-1 2-2 4-2h4c2 0 3 1 4 2v4c0 1 1 2 2 2h4c1 0 2-1 2-2v-4c1-1 2-2 4-2h4c2 0 3 1 4 2v4c0 1 1 2 2 2h4c1 0 2-1 2-2v-4c1-1 2-2 4-2h4c2 0 3 1 4 2v4c0 1 1 2 2 2h2v-4c0-1-1-2-2-2zm-36 0c-2 0-3 1-4 2v4c0 1-1 2-2 2h-4c-1 0-2-1-2-2v-4c-1-1-2-2-4-2h-2v-4h2c2 0 3-1 4-2v-4c0-1 1-2 2-2h4c1 0 2 1 2 2v4c1 1 2 2 4 2h4c2 0 3-1 4-2v-4c0-1 1-2 2-2h4c1 0 2 1 2 2v4c1 1 2 2 4 2h4c2 0 3-1 4-2v-4c0-1 1-2 2-2h4c1 0 2 1 2 2v4c1 1 2 2 4 2h2v4h-2c-2 0-3 1-4 2v4c0 1-1 2-2 2h-4c-1 0-2-1-2-2v-4c-1-1-2-2-4-2H18z' fill='%23f97316' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.8;
+    }
+    .promo-hero-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        line-height: 1;
+        margin-bottom: 1rem;
+    }
+    .promo-hero-title span {
+        background: var(--gradient-brand);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .promo-hero-desc {
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    /* ─── COUPON TICKETS ────────────────────────────────── */
+    .promo-section-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        margin: 3.5rem 0 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .promo-section-title span {
+        color: var(--primary);
+    }
+    
+    .coupon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .coupon-ticket {
+        position: relative;
+        background: var(--gradient-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        min-height: 150px;
+        overflow: hidden;
+        transition: var(--transition-bounce);
+        box-shadow: var(--shadow-sm);
+    }
+    .coupon-ticket:hover {
+        transform: translateY(-5px);
+        border-color: var(--border-accent);
+        box-shadow: var(--shadow-md), var(--shadow-glow);
+    }
+
+    /* Left side: Discount value */
+    .coupon-left {
+        width: 110px;
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+        border-right: 1px dashed var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        text-align: center;
+        position: relative;
+    }
+    .coupon-left-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.25rem;
+    }
+    .coupon-value {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: var(--primary);
+        line-height: 1.1;
+    }
+    .coupon-value-sub {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    /* Right side: Info and Copy */
+    .coupon-right {
+        flex: 1;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .coupon-info-header {
+        margin-bottom: 0.5rem;
+    }
+    .coupon-code {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.2rem;
+    }
+    .coupon-desc {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    .coupon-meta {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        margin-top: 0.5rem;
+    }
+    
+    .coupon-action-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+    }
+    .coupon-expiry {
+        font-size: 0.72rem;
+        color: #f59e0b;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .btn-copy-code {
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid var(--border-accent);
+        color: var(--primary);
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.85rem;
+        border-radius: 6px;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .btn-copy-code:hover {
+        background: var(--primary);
+        color: white;
+        transform: scale(1.03);
+    }
+
+    /* Ticket circular notch effects */
+    .coupon-ticket::before,
+    .coupon-ticket::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: var(--bg-dark);
+        border-radius: 50%;
+        left: 102px; /* 110px width - 7px half notch */
+        border: 1px solid var(--border);
+        z-index: 2;
+    }
+    .coupon-ticket::before {
+        top: -7px;
+    }
+    .coupon-ticket::after {
+        bottom: -7px;
+    }
+
+    /* ─── SALE PRODUCTS ─────────────────────────────────── */
+    .sale-section {
+        padding-bottom: 5rem;
+    }
+    .sale-grid {
+        margin-top: 1.5rem;
+    }
+</style>
+}
+
+<!-- HERO BANNER -->
+<section class="promo-hero" aria-label="Khuyến mãi Banner">
+    <div class="container" data-animate>
+        <h1 class="promo-hero-title">Săn Sale Đỉnh Cao<span> Nhận Voucher Khủng</span></h1>
+        <p class="promo-hero-desc">
+            Cơ hội sở hữu trang phục, giày dép và dụng cụ thể thao cao cấp từ Nike, Adidas, Yonex với giá không thể tốt hơn. Áp dụng thêm mã giảm giá để tối ưu hóa chi phí!
+        </p>
+    </div>
+</section>
+
+<div class="container">
+    <!-- SECTION 1: VOUCHERS -->
+    <section aria-labelledby="vouchers-title">
+        <h2 class="promo-section-title" id="vouchers-title">
+            <span>🎫</span> Mã Giảm Giá Đang Diễn Ra
+        </h2>
+        
+        @if (Model.Coupons.Any())
+        {
+            <div class="coupon-grid" role="list">
+                @foreach (var coupon in Model.Coupons)
+                {
+                    <div class="coupon-ticket" role="listitem" data-animate>
+                        <div class="coupon-left">
+                            <span class="coupon-left-icon">@(coupon.IsPercent ? "🏷️" : "💰")</span>
+                            <div class="coupon-value">
+                                @if (coupon.IsPercent)
+                                {
+                                    <span>@((int)coupon.DiscountValue)%</span>
+                                }
+                                else
+                                {
+                                    <span>@(coupon.DiscountValue >= 1000 ? (coupon.DiscountValue / 1000).ToString("N0") + "K" : coupon.DiscountValue.ToString())</span>
+                                }
+                            </div>
+                            <div class="coupon-value-sub">Giảm giá</div>
+                        </div>
+                        <div class="coupon-right">
+                            <div class="coupon-info-header">
+                                <div class="coupon-code">@coupon.Code</div>
+                                <div class="coupon-desc">@coupon.Description</div>
+                                <div class="coupon-meta">
+                                    @if (coupon.MinOrderAmount.HasValue && coupon.MinOrderAmount.Value > 0)
+                                    {
+                                        <span>• Đơn tối thiểu: <strong>@coupon.MinOrderAmount.Value.ToString("N0")₫</strong></span>
+                                    }
+                                    @if (coupon.MaxDiscount.HasValue && coupon.MaxDiscount.Value > 0)
+                                    {
+                                        <span>• Giảm tối đa: <strong>@coupon.MaxDiscount.Value.ToString("N0")₫</strong></span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="coupon-action-row">
+                                <div class="coupon-expiry">
+                                    <i class='bx bx-time-five'></i>
+                                    <span>Hạn: @(coupon.ExpiresAt?.ToString("dd/MM/yyyy") ?? "Vô thời hạn")</span>
+                                </div>
+                                <button type="button" class="btn-copy-code"
+                                        onclick="copyCouponCode('@coupon.Code')"
+                                        aria-label="Sao chép mã @coupon.Code">
+                                    <i class='bx bx-copy'></i>
+                                    <span>Copy Mã</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="padding: 3rem 1rem;">
+                <div class="empty-state-icon">🎫</div>
+                <div class="empty-state-title">Chưa có mã giảm giá</div>
+                <p>Quay lại sau để cập nhật các ưu đãi mới nhất nhé!</p>
+            </div>
+        }
+    </section>
+
+    <!-- SECTION 2: SALE PRODUCTS -->
+    <section class="sale-section" aria-labelledby="sale-products-title">
+        <h2 class="promo-section-title" id="sale-products-title">
+            <span>🔥</span> Deal Hot Đang Giảm Giá
+        </h2>
+
+        @if (Model.SaleProducts.Any())
+        {
+            <div class="products-grid sale-grid" role="list">
+                @foreach (var p in Model.SaleProducts)
+                {
+                    <article class="product-card" role="listitem" data-animate>
+                        <a href="/san-pham/@p.Slug" class="product-card-image" aria-label="Xem sản phẩm @p.Name">
+                            @if (!string.IsNullOrEmpty(p.Image))
+                            {
+                                <img src="/uploads/products/@p.Image" alt="@p.Name" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span style="font-size:4rem;display:flex;align-items:center;justify-content:center;height:100%">👟</span>
+                            }
+                            <div class="product-card-badges">
+                                <span class="badge badge-sale">-@p.DiscountPercent%</span>
+                                @if (p.IsNew)
+                                {
+                                    <span class="badge badge-new">Mới</span>
+                                }
+                            </div>
+                        </a>
+                        <div class="product-card-actions">
+                            <button type="button" class="product-card-action-btn"
+                                    data-wishlist-id="@p.Id"
+                                    onclick="Wishlist.toggle('@p.Id','@p.Name')"
+                                    aria-pressed="false"
+                                    aria-label="Yêu thích">
+                                <i class='bx bx-heart'></i>
+                            </button>
+                            <a href="/san-pham/@p.Slug" class="product-card-action-btn" aria-label="Xem chi tiết">
+                                <i class='bx bx-show'></i>
+                            </a>
+                        </div>
+                        <div class="product-card-body">
+                            @if (!string.IsNullOrEmpty(p.Brand))
+                            {
+                                <div class="product-card-brand">@p.Brand</div>
+                            }
+                            <h3 class="product-card-name"><a href="/san-pham/@p.Slug">@p.Name</a></h3>
+                            <div class="product-card-rating">
+                                <div class="stars" aria-label="5 sao">★★★★★</div>
+                                <span>(18)</span>
+                            </div>
+                            <div class="product-card-price">
+                                <span class="price-current">@p.FinalPrice.ToString("N0")₫</span>
+                                <span class="price-original">@p.Price.ToString("N0")₫</span>
+                                <span class="price-discount">-@p.DiscountPercent%</span>
+                            </div>
+                            <div class="product-card-footer">
+                                <button type="button" class="btn-add-cart"
+                                        data-id="@p.Id"
+                                        data-name="@p.Name"
+                                        data-price="@p.FinalPrice"
+                                        data-image="@(p.Image ?? "")"
+                                        onclick="addToCart(this)"
+                                        aria-label="Thêm @p.Name vào giỏ">
+                                    <i class='bx bx-cart-add'></i> Thêm giỏ
+                                </button>
+                                <span class="tag">Còn @p.Stock</span>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="padding: 3rem 1rem;">
+                <div class="empty-state-icon">🛍️</div>
+                <div class="empty-state-title">Chưa có sản phẩm giảm giá</div>
+                <p>Các sản phẩm sale sẽ sớm được cập nhật. Bạn có thể xem các sản phẩm khác tại cửa hàng nhé!</p>
+                <div style="margin-top: 1.5rem;">
+                    <a href="/san-pham" class="btn btn-primary">Ghé cửa hàng</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+<script>
+    function copyCouponCode(code) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(() => {
+                Toast.success(`📋 Đã copy mã giảm giá: <strong>${code}</strong>`);
+            }).catch(() => {
+                fallbackCopyText(code);
+            });
+        } else {
+            fallbackCopyText(code);
+        }
+    }
+
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            Toast.success(`📋 Đã copy mã giảm giá: <strong>${text}</strong>`);
+        } catch (err) {
+            Toast.error("❌ Không thể sao chép mã tự động. Vui lòng tự copy!");
+        }
+        document.body.removeChild(textArea);
+    }
+</script>
+}

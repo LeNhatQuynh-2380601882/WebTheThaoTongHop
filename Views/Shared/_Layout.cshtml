@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="@(ViewData["Description"] ?? "Tam Thái Tử Sport - Cửa hàng thể thao chuyên nghiệp. Giày, quần áo, dụng cụ thể thao chính hãng.")" />
+    <meta name="theme-color" content="#f97316" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " | " : "")Tam Thái Tử Sport 🏆</title>
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Tam Thái Tử Sport" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@(ViewData["Title"] ?? "Tam Thái Tử Sport")" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Icons (BoxIcons) -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat-widget.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="container">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <span class="topbar-item">
+                        <i class='bx bx-phone'></i>
+                        <span>Hotline: <strong>1800 1234</strong></span>
+                    </span>
+                    <span class="topbar-item">
+                        <i class='bx bx-time'></i>
+                        <span>8:00 - 21:00 (T2 - CN)</span>
+                    </span>
+                </div>
+                <div class="topbar-right">
+                    <span class="topbar-item">
+                        <i class='bx bx-package'></i>
+                        <span>Miễn phí ship đơn từ 500k</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="mainNav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="navbar-inner">
+                <!-- Logo -->
+                <a href="/" class="navbar-logo" aria-label="Trang chủ Tam Thái Tử Sport">
+                    <div class="logo-icon" aria-hidden="true">⚡</div>
+                    <div class="logo-text">
+                        <span class="logo-brand">Tam Thái Tử</span>
+                        <span class="logo-sub">Sport Shop</span>
+                    </div>
+                </a>
+
+                <!-- Search -->
+                <div class="navbar-search" role="search">
+                    <form action="/san-pham" method="get" id="searchForm">
+                        <div class="search-input-wrap">
+                            <i class='bx bx-search search-icon' aria-hidden="true"></i>
+                            <input type="text"
+                                   name="q"
+                                   id="searchInput"
+                                   class="search-input"
+                                   placeholder="Tìm giày, áo, phụ kiện thể thao..."
+                                   autocomplete="off"
+                                   value="@ViewData["SearchQuery"]"
+                                   aria-label="Tìm kiếm sản phẩm" />
+                            <button type="submit" class="search-btn" aria-label="Tìm kiếm">Tìm</button>
+                        </div>
+                        <!-- Search Suggestions -->
+                        <div class="search-results" id="searchResults" role="listbox" aria-label="Gợi ý tìm kiếm"></div>
+                    </form>
+                </div>
+
+                <!-- Desktop Nav -->
+                <ul class="navbar-nav" role="menubar">
+                    <li class="nav-item" role="none">
+                        <a asp-controller="Home" asp-action="Index"
+                           class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                           role="menuitem">
+                            <i class='bx bx-home-alt'></i> Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a asp-controller="Product" asp-action="Index"
+                           class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")"
+                           role="menuitem">
+                            <i class='bx bx-store'></i> Sản phẩm
+                            <i class='bx bx-chevron-down' aria-hidden="true"></i>
+                        </a>
+                        <div class="nav-dropdown" role="menu" aria-label="Danh mục sản phẩm">
+                            <a href="/san-pham?category=giay-the-thao" class="nav-dropdown-item" role="menuitem">👟 Giày thể thao</a>
+                            <a href="/san-pham?category=quan-ao-the-thao" class="nav-dropdown-item" role="menuitem">👕 Quần áo</a>
+                            <a href="/san-pham?category=bong-da" class="nav-dropdown-item" role="menuitem">⚽ Bóng đá</a>
+                            <a href="/san-pham?category=bong-ro" class="nav-dropdown-item" role="menuitem">🏀 Bóng rổ</a>
+                            <a href="/san-pham?category=cau-long" class="nav-dropdown-item" role="menuitem">🏸 Cầu lông</a>
+                            <a href="/san-pham?category=gym-fitness" class="nav-dropdown-item" role="menuitem">🏋️ Gym & Fitness</a>
+                        </div>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="/khuyen-mai" class="nav-link" role="menuitem">
+                            🔥 Khuyến mãi
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="/gioi-thieu" class="nav-link" role="menuitem">
+                            <i class='bx bx-info-circle'></i> Giới thiệu
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Actions -->
+                <div class="navbar-actions">
+                    <!-- Wishlist -->
+                    <a href="/wishlist" class="nav-action-btn" id="wishlistBtn" aria-label="Danh sách yêu thích" title="Yêu thích">
+                        <i class='bx bx-heart'></i>
+                        <span class="nav-badge" id="wishlistCount" style="display:none">0</span>
+                    </a>
+
+                    <!-- Cart -->
+                    <button class="nav-action-btn" id="cartToggleBtn" aria-label="Giỏ hàng" aria-expanded="false" title="Giỏ hàng">
+                        <i class='bx bx-shopping-bag'></i>
+                        <span class="nav-badge" id="cartCount">0</span>
+                    </button>
+
+                    <!-- Auth -->
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="user-menu" id="userMenu">
+                            <button class="user-avatar-btn" aria-haspopup="true" aria-expanded="false" id="userMenuBtn">
+                                <div class="user-avatar">
+                                    @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
+                                </div>
+                                <span class="user-name">@(User.Identity.Name?.Split('@')[0] ?? "Tài khoản")</span>
+                                <i class='bx bx-chevron-down' style="font-size:0.85rem; color: var(--text-muted);" aria-hidden="true"></i>
+                            </button>
+                            <div class="user-dropdown" role="menu">
+                                <div class="user-dropdown-header">
+                                    <div class="user-dropdown-name">@User.Identity.Name?.Split('@')[0]</div>
+                                    <div class="user-dropdown-email">@User.Identity.Name</div>
+                                </div>
+                                <a asp-controller="Profile" asp-action="Index" class="user-dropdown-item" role="menuitem">
+                                    <i class='bx bx-user'></i> Thông tin cá nhân
+                                </a>
+                                <a asp-controller="Profile" asp-action="Orders" class="user-dropdown-item" role="menuitem">
+                                    <i class='bx bx-package'></i> Đơn hàng của tôi
+                                </a>
+                                <a href="/wishlist" class="user-dropdown-item" role="menuitem">
+                                    <i class='bx bx-heart'></i> Danh sách yêu thích
+                                </a>
+                                <a asp-controller="Profile" asp-action="Index" class="user-dropdown-item" role="menuitem">
+                                    <i class='bx bx-star'></i> Điểm thưởng
+                                </a>
+                                @if (User.IsInRole("Admin") || User.IsInRole("NhanVien"))
+                                {
+                                    <hr class="user-dropdown-divider" />
+                                    <a href="/admin" class="user-dropdown-item" role="menuitem">
+                                        <i class='bx bx-cog'></i> Quản trị
+                                    </a>
+                                }
+                                <hr class="user-dropdown-divider" />
+                                <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="user-dropdown-item danger" role="menuitem">
+                                        <i class='bx bx-log-out'></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Auth" asp-action="Login" class="btn-nav-auth">
+                            <i class='bx bx-log-in'></i>
+                            <span>Đăng nhập</span>
+                        </a>
+                    }
+
+                    <!-- Mobile toggle -->
+                    <button class="navbar-toggle" id="mobileMenuToggle" aria-label="Mở menu" aria-expanded="false">
+                        <i class='bx bx-menu' id="menuIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
+            <div class="container">
+                <div class="mobile-search">
+                    <form action="/san-pham" method="get">
+                        <div class="search-input-wrap">
+                            <i class='bx bx-search search-icon'></i>
+                            <input type="text" name="q" class="search-input" placeholder="Tìm sản phẩm..." />
+                            <button type="submit" class="search-btn">Tìm</button>
+                        </div>
+                    </form>
+                </div>
+                <a href="/" class="mobile-nav-item"><i class='bx bx-home-alt'></i> Trang chủ</a>
+                <a href="/san-pham" class="mobile-nav-item"><i class='bx bx-store'></i> Sản phẩm</a>
+                <a href="/khuyen-mai" class="mobile-nav-item">🔥 Khuyến mãi</a>
+                <a href="/gioi-thieu" class="mobile-nav-item"><i class='bx bx-info-circle'></i> Giới thiệu</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Profile" asp-action="Index" class="mobile-nav-item"><i class='bx bx-user'></i> Tài khoản</a>
+                    <a asp-controller="Profile" asp-action="Orders" class="mobile-nav-item"><i class='bx bx-package'></i> Đơn hàng</a>
+                }
+                else
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="mobile-nav-item"><i class='bx bx-log-in'></i> Đăng nhập</a>
+                    <a asp-controller="Auth" asp-action="Register" class="mobile-nav-item"><i class='bx bx-user-plus'></i> Đăng ký</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- MINI CART SIDEBAR -->
+    <div class="cart-overlay" id="cartOverlay" role="presentation"></div>
+    <aside class="mini-cart" id="miniCart" role="complementary" aria-label="Giỏ hàng">
+        <div class="mini-cart-header">
+            <h2 class="mini-cart-title">
+                <i class='bx bx-shopping-bag'></i>
+                Giỏ hàng (<span id="miniCartCount">0</span>)
+            </h2>
+            <button class="mini-cart-close" id="cartCloseBtn" aria-label="Đóng giỏ hàng">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div class="mini-cart-body" id="miniCartBody">
+            <div class="mini-cart-empty">
+                <div class="mini-cart-empty-icon">🛒</div>
+                <div class="mini-cart-empty-text">Giỏ hàng trống</div>
+            </div>
+        </div>
+        <div class="mini-cart-footer" id="miniCartFooter" style="display:none">
+            <div class="mini-cart-summary">
+                <div class="mini-cart-row">
+                    <span style="color:var(--text-muted)">Tạm tính</span>
+                    <span id="cartSubtotal">0₫</span>
+                </div>
+                <div class="mini-cart-row">
+                    <span style="color:var(--text-muted)">Phí giao hàng</span>
+                    <span style="color:#22c55e">Miễn phí</span>
+                </div>
+                <div class="mini-cart-row total">
+                    <span>Tổng cộng</span>
+                    <span class="amount" id="cartTotal">0₫</span>
+                </div>
+            </div>
+            <div class="mini-cart-actions">
+                <a href="/gio-hang" class="btn btn-secondary" style="width:100%; justify-content:center;">
+                    <i class='bx bx-cart'></i> Xem giỏ hàng
+                </a>
+                <a href="/dat-hang" class="btn btn-primary" style="width:100%; justify-content:center;">
+                    <i class='bx bx-credit-card'></i> Thanh toán ngay
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer" aria-live="polite" aria-label="Thông báo"></div>
+
+    <!-- MAIN CONTENT -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-top">
+                <!-- Brand -->
+                <div>
+                    <div class="navbar-logo" style="margin-bottom:1rem;">
+                        <div class="logo-icon">⚡</div>
+                        <div class="logo-text">
+                            <span class="logo-brand">Tam Thái Tử</span>
+                            <span class="logo-sub">Sport Shop</span>
+                        </div>
+                    </div>
+                    <p class="footer-tagline">
+                        Cửa hàng thể thao chuyên nghiệp hàng đầu Việt Nam. Chúng tôi cung cấp
+                        trang phục, giày dép và dụng cụ thể thao chính hãng từ các thương hiệu
+                        hàng đầu thế giới.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-btn" aria-label="Facebook"><i class='bx bxl-facebook'></i></a>
+                        <a href="#" class="social-btn" aria-label="Instagram"><i class='bx bxl-instagram'></i></a>
+                        <a href="#" class="social-btn" aria-label="YouTube"><i class='bx bxl-youtube'></i></a>
+                        <a href="#" class="social-btn" aria-label="TikTok"><i class='bx bxl-tiktok'></i></a>
+                    </div>
+                </div>
+
+                <!-- Links -->
+                <div>
+                    <h3 class="footer-col-title">Danh mục</h3>
+                    <nav class="footer-links" aria-label="Danh mục sản phẩm">
+                        <a href="/san-pham?category=giay-the-thao" class="footer-link"><i class='bx bx-chevron-right'></i> Giày thể thao</a>
+                        <a href="/san-pham?category=quan-ao-the-thao" class="footer-link"><i class='bx bx-chevron-right'></i> Quần áo</a>
+                        <a href="/san-pham?category=bong-da" class="footer-link"><i class='bx bx-chevron-right'></i> Bóng đá</a>
+                        <a href="/san-pham?category=bong-ro" class="footer-link"><i class='bx bx-chevron-right'></i> Bóng rổ</a>
+                        <a href="/san-pham?category=cau-long" class="footer-link"><i class='bx bx-chevron-right'></i> Cầu lông</a>
+                        <a href="/san-pham?category=gym-fitness" class="footer-link"><i class='bx bx-chevron-right'></i> Gym & Fitness</a>
+                    </nav>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h3 class="footer-col-title">Hỗ trợ</h3>
+                    <nav class="footer-links" aria-label="Hỗ trợ khách hàng">
+                        <a href="/chinh-sach-doi-tra" class="footer-link"><i class='bx bx-chevron-right'></i> Đổi trả & Hoàn tiền</a>
+                        <a href="/huong-dan-chon-size" class="footer-link"><i class='bx bx-chevron-right'></i> Hướng dẫn chọn size</a>
+                        <a href="/faq" class="footer-link"><i class='bx bx-chevron-right'></i> Câu hỏi thường gặp</a>
+                        <a href="/lien-he" class="footer-link"><i class='bx bx-chevron-right'></i> Liên hệ</a>
+                    </nav>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h3 class="footer-col-title">Liên hệ</h3>
+                    <div class="footer-contact-item">
+                        <span>📍</span>
+                        <span>123 Đường Thể Thao, Q. Cầu Giấy, Hà Nội</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span>📞</span>
+                        <span><a href="tel:18001234" style="color:inherit">1800 1234</a> (Miễn phí)</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span>✉️</span>
+                        <span><a href="mailto:support@tamthaitu.vn" style="color:inherit">support@tamthaitu.vn</a></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span>🕒</span>
+                        <span>8:00 – 21:00, T2 – CN</span>
+                    </div>
+
+                    <!-- Newsletter -->
+                    <div style="margin-top:1.5rem;">
+                        <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.6rem;">Đăng ký nhận ưu đãi</p>
+                        <form action="/newsletter" method="post" style="display:flex; gap:0.5rem;">
+                            @Html.AntiForgeryToken()
+                            <input type="email" name="email" placeholder="Email của bạn" class="form-control" style="border-radius:8px; flex:1; padding:0.55rem 0.85rem; font-size:0.82rem;" required />
+                            <button type="submit" class="btn btn-primary btn-sm" style="flex-shrink:0;">
+                                <i class='bx bx-send'></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; 2026 <span>Tam Thái Tử Sport</span>. Tất cả quyền được bảo lưu.
+                </p>
+                <div class="footer-payment-icons" aria-label="Phương thức thanh toán">
+                    <span class="payment-icon">COD</span>
+                    <span class="payment-icon">MoMo</span>
+                    <span class="payment-icon">ZaloPay</span>
+                    <span class="payment-icon">VNPay</span>
+                    <span class="payment-icon">Visa</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FLOATING CHAT WIDGET -->
+    <div class="user-chat-widget" id="userChatWidget">
+        <button class="chat-widget-bubble" id="chatWidgetBubble" aria-label="Nhắn tin với chúng tôi">
+            <i class='bx bx-message-rounded-dots'></i>
+            <span class="chat-widget-badge" id="chatWidgetBadge" style="display: none;">0</span>
+        </button>
+
+        <div class="chat-widget-window" id="chatWidgetWindow">
+            <div class="chat-window-header">
+                <div class="chat-header-info">
+                    <div class="chat-avatar-glow">⚡</div>
+                    <div class="chat-title-status">
+                        <span class="chat-window-title">Tam Thái Tử Sport</span>
+                        <span class="chat-window-status">
+                            <span class="status-dot"></span> Tư vấn trực tuyến
+                        </span>
+                    </div>
+                </div>
+                <button class="chat-window-close" id="chatWindowCloseBtn" aria-label="Đóng chat">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+
+            <div class="chat-window-body" id="chatWidgetMessages">
+                <div class="chat-welcome-msg">
+                    <div class="welcome-icon">👋</div>
+                    <h4>Xin chào!</h4>
+                    <p>Cảm ơn bạn đã ghé thăm Tam Thái Tử Sport. Chúng tôi có thể giúp gì cho bạn hôm nay?</p>
+                </div>
+            </div>
+
+            <div class="chat-window-footer">
+                <input type="text" class="chat-window-input" id="chatWidgetInput" placeholder="Nhập tin nhắn..." autocomplete="off" />
+                <button class="chat-window-send" id="chatWidgetSendBtn" aria-label="Gửi">
+                    <i class='bx bx-send'></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        (function() {
+            if (window.location.pathname.toLowerCase().startsWith('/admin')) {
+                return;
+            }
+
+            const isAuthenticated = @(User.Identity?.IsAuthenticated == true ? "true" : "false");
+            const currentUserName = "@(User.Identity?.Name?.Split('@')[0] ?? "")";
+            const isAdminOrStaff = @(User.IsInRole("Admin") || User.IsInRole("NhanVien") ? "true" : "false");
+
+            let roomId = localStorage.getItem('chat_room_id');
+            let senderName = localStorage.getItem('chat_sender_name');
+
+            if (isAuthenticated && currentUserName) {
+                const cleanName = currentUserName.replace(/[^a-zA-Z0-9]/g, "_");
+                roomId = "user_" + cleanName;
+                senderName = currentUserName;
+            } else {
+                if (!roomId) {
+                    roomId = 'guest_' + Math.random().toString(36).substring(2, 15);
+                    localStorage.setItem('chat_room_id', roomId);
+                }
+                if (!senderName) {
+                    senderName = 'Khách ' + roomId.substring(6, 11);
+                    localStorage.setItem('chat_sender_name', senderName);
+                }
+            }
+
+            let connection = null;
+            let isChatOpen = false;
+            let unreadCount = 0;
+
+            const bubble = document.getElementById('chatWidgetBubble');
+            const windowPane = document.getElementById('chatWidgetWindow');
+            const closeBtn = document.getElementById('chatWindowCloseBtn');
+            const sendBtn = document.getElementById('chatWidgetSendBtn');
+            const input = document.getElementById('chatWidgetInput');
+            const messagesContainer = document.getElementById('chatWidgetMessages');
+            const badge = document.getElementById('chatWidgetBadge');
+
+            bubble.addEventListener('click', () => {
+                if (isAdminOrStaff) {
+                    window.location.href = '/Admin/Chat';
+                    return;
+                }
+                isChatOpen = !isChatOpen;
+                if (isChatOpen) {
+                    windowPane.classList.add('open');
+                    unreadCount = 0;
+                    badge.style.display = 'none';
+                    loadChatHistory();
+                    setTimeout(() => input.focus(), 150);
+                } else {
+                    windowPane.classList.remove('open');
+                }
+            });
+
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isChatOpen = false;
+                windowPane.classList.remove('open');
+            });
+
+            async function loadChatHistory() {
+                try {
+                    const res = await fetch(`/api/chat/history?roomId=${roomId}`);
+                    if (res.ok) {
+                        const history = await res.json();
+                        renderHistory(history);
+                    }
+                } catch (err) {
+                    console.error("Error loading chat history:", err);
+                }
+            }
+
+            function renderHistory(history) {
+                if (!history || history.length === 0) {
+                    messagesContainer.innerHTML = `
+                        <div class="chat-welcome-msg">
+                            <div class="welcome-icon">👋</div>
+                            <h4>Xin chào!</h4>
+                            <p>Cảm ơn bạn đã ghé thăm Tam Thái Tử Sport. Chúng tôi có thể giúp gì cho bạn hôm nay?</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                messagesContainer.innerHTML = '';
+                history.forEach(msg => {
+                    appendMsgHTML(msg.senderName, msg.message, msg.createdAt, msg.isAdminSender);
+                });
+                scrollToBottom();
+            }
+
+            function appendMsgHTML(name, message, createdAt, isAdmin) {
+                const time = new Date(createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                const row = document.createElement('div');
+                row.className = `chat-widget-msg-row ${isAdmin ? 'other' : 'self'}`;
+                row.innerHTML = `
+                    <div class="chat-widget-msg-bubble">
+                        <span style="font-weight:600;font-size:0.7rem;margin-bottom:0.15rem;display:${isAdmin ? 'block' : 'none'};">${name}</span>
+                        <span>${escapeHtml(message)}</span>
+                        <span class="chat-widget-msg-meta">${time}</span>
+                    </div>
+                `;
+                messagesContainer.appendChild(row);
+            }
+
+            function escapeHtml(str) {
+                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            }
+
+            function scrollToBottom() {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            function sendMsg() {
+                const text = input.value.trim();
+                if (!text) return;
+
+                input.value = '';
+
+                if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                    connection.invoke("SendMessage", roomId, senderName, text, false)
+                        .catch(err => {
+                            console.error("Error sending message:", err);
+                        });
+                } else {
+                    console.warn("SignalR not connected. Trying to send message...");
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMsg);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendMsg();
+                }
+            });
+
+            function initSignalR() {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/chatHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("ReceiveMessage", (msgRoomId, msgSenderName, msgText, msgCreatedAt, isAdmin) => {
+                    if (msgRoomId === roomId) {
+                        appendMsgHTML(msgSenderName, msgText, msgCreatedAt, isAdmin);
+                        scrollToBottom();
+
+                        if (!isChatOpen) {
+                            unreadCount++;
+                            badge.textContent = unreadCount;
+                            badge.style.display = 'flex';
+
+                            try {
+                                const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav");
+                                audio.volume = 0.4;
+                                audio.play();
+                            } catch (e) {}
+                        }
+                    }
+                });
+
+                connection.start()
+                    .then(() => {
+                        connection.invoke("JoinRoom", roomId)
+                            .catch(err => console.error("Error joining hub room:", err));
+                    })
+                    .catch(err => console.error("SignalR Connection Error (User):", err));
+            }
+
+            if (!isAdminOrStaff) {
+                setTimeout(initSignalR, 1000);
+            }
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

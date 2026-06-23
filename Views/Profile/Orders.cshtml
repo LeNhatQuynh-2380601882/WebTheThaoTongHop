@@ -1,0 +1,180 @@
+@model List<TamThaiTuSport.Models.Domain.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var statusFilters = new[] {
+        ("", "Tất cả"),
+        ("ChoPhanHoi", "Chờ duyệt"),
+        ("DaXacNhan", "Đã xác nhận"),
+        ("DangGiao", "Đang giao"),
+        ("DaGiao", "Đã giao"),
+        ("DaHuy", "Đã hủy"),
+    };
+    var currentStatus = ViewBag.CurrentStatus as string ?? "";
+}
+
+@section Styles {
+<style>
+.orders-layout { display: grid; grid-template-columns: 260px 1fr; gap: 2rem; padding: 2.5rem 0 5rem; align-items: start; }
+.orders-sidebar { background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; position: sticky; top: 90px; }
+.orders-sidebar-title { padding: 1.25rem 1.5rem; font-weight: 700; font-size: 0.875rem; border-bottom: 1px solid var(--border); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.status-filter { display: block; padding: 0.75rem 1.5rem; font-size: 0.875rem; color: var(--text-secondary); text-decoration: none; transition: var(--transition); border-left: 3px solid transparent; }
+.status-filter:hover { background: rgba(249,115,22,0.05); color: var(--primary); }
+.status-filter.active { background: rgba(249,115,22,0.08); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+.order-card { background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; transition: var(--transition); }
+.order-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md); }
+.order-card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
+.order-id { font-weight: 700; font-size: 0.9rem; }
+.order-date { font-size: 0.78rem; color: var(--text-muted); }
+.status-badge { padding: 0.3rem 0.85rem; border-radius: 100px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.status-ChoDuyet { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.status-DaXacNhan { background: rgba(59,130,246,0.1); color: #60a5fa; }
+.status-DangGiao { background: rgba(139,92,246,0.1); color: #a78bfa; }
+.status-DaGiao { background: rgba(34,197,94,0.1); color: #4ade80; }
+.status-DaHuy { background: rgba(239,68,68,0.1); color: #f87171; }
+.order-card-body { padding: 1rem 1.5rem; }
+.order-products { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.order-product-thumb { width: 56px; height: 56px; border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.order-product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.order-card-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem; }
+.order-total-label { font-size: 0.78rem; color: var(--text-muted); }
+.order-total-value { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+@@media (max-width: 900px) { .orders-layout { grid-template-columns: 1fr; } .orders-sidebar { position: static; } }
+</style>
+}
+
+<div class="page-header">
+    <div class="container page-header-inner">
+        <nav class="breadcrumb">
+            <a href="/">Trang chủ</a><span class="breadcrumb-sep">›</span>
+            <a href="/tai-khoan">Tài khoản</a><span class="breadcrumb-sep">›</span>
+            <span>Đơn hàng</span>
+        </nav>
+        <h1 class="page-title">Đơn Hàng <span>Của Tôi</span></h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="orders-layout">
+        <!-- Filter sidebar -->
+        <aside class="orders-sidebar">
+            <div class="orders-sidebar-title">🔍 Lọc trạng thái</div>
+            @foreach (var (val, label) in statusFilters)
+            {
+                <a href="/tai-khoan/don-hang@(string.IsNullOrEmpty(val) ? "" : $"?status={val}")"
+                   class="status-filter @(currentStatus == val ? "active" : "")">
+                    @label
+                </a>
+            }
+            <div style="padding:1rem 1.5rem;border-top:1px solid var(--border);margin-top:0.5rem">
+                <a href="/tai-khoan" class="profile-nav-item" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--text-muted);text-decoration:none">
+                    ← Về tài khoản
+                </a>
+            </div>
+        </aside>
+
+        <!-- Orders list -->
+        <div>
+            @if (TempData["Success"] != null)
+            {
+                <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-left:3px solid #22c55e;color:#4ade80;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.875rem;margin-bottom:1.25rem">
+                    @TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-left:3px solid #ef4444;color:#f87171;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.875rem;margin-bottom:1.25rem">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <div class="empty-state-title">Chưa có đơn hàng</div>
+                    <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.5rem">
+                        Hãy mua sắm và đặt hàng đầu tiên của bạn!
+                    </p>
+                    <a href="/san-pham" class="btn btn-primary"><i class='bx bx-store'></i> Mua sắm ngay</a>
+                </div>
+            }
+            else
+            {
+                @foreach (var order in Model)
+                {
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <div>
+                                <div class="order-id">Đơn hàng #@order.Id</div>
+                                <div class="order-date">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            <span class="status-badge status-@order.Status">
+                                @(order.Status switch {
+                                    TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi => "⏳ Chờ duyệt",
+                                    TamThaiTuSport.Models.Domain.OrderStatus.DaXacNhan => "✅ Đã xác nhận",
+                                    TamThaiTuSport.Models.Domain.OrderStatus.DangGiao => "🚚 Đang giao",
+                                    TamThaiTuSport.Models.Domain.OrderStatus.DaGiao => "🎉 Đã giao",
+                                    TamThaiTuSport.Models.Domain.OrderStatus.DaHuy => "❌ Đã hủy",
+                                    _ => order.Status.ToString()
+                                })
+                            </span>
+                        </div>
+                        <div class="order-card-body">
+                            <div class="order-products">
+                                @foreach (var detail in order.OrderDetails.Take(5))
+                                {
+                                    <div class="order-product-thumb" title="@(detail.Product?.Name ?? "")">
+                                        @if (detail.Product?.Image != null)
+                                        {
+                                            <img src="/uploads/products/@detail.Product.Image" alt="@(detail.Product?.Name ?? "")" />
+                                        }
+                                        else
+                                        {
+                                            <span>👟</span>
+                                        }
+                                    </div>
+                                }
+                                @if (order.OrderDetails.Count > 5)
+                                {
+                                    <div class="order-product-thumb" style="background:var(--primary);color:white;font-size:0.8rem;font-weight:700">
+                                        +@(order.OrderDetails.Count - 5)
+                                    </div>
+                                }
+                            </div>
+                            <div style="margin-top:0.75rem;font-size:0.8rem;color:var(--text-muted)">
+                                @(order.OrderDetails.Count) sản phẩm • @order.PaymentMethod •
+                                @(order.PaymentStatus switch {
+                                    TamThaiTuSport.Models.Domain.PaymentStatus.ChuaThanhToan => "Chưa thanh toán",
+                                    TamThaiTuSport.Models.Domain.PaymentStatus.DaThanhToan => "Đã thanh toán",
+                                    _ => "Đang xử lý"
+                                })
+                            </div>
+                        </div>
+                        <div class="order-card-footer">
+                            <div>
+                                <div class="order-total-label">Tổng thanh toán</div>
+                                <div class="order-total-value">@order.FinalTotal.ToString("N0")₫</div>
+                            </div>
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                                <a href="/tai-khoan/don-hang/@order.Id" class="btn btn-secondary btn-sm">
+                                    <i class='bx bx-show'></i> Chi tiết
+                                </a>
+                                @if (order.Status == TamThaiTuSport.Models.Domain.OrderStatus.ChoPhanHoi)
+                                {
+                                    <form asp-controller="Profile" asp-action="CancelOrder" asp-route-id="@order.Id" method="post"
+                                          onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này không?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:0.45rem 0.85rem;border-radius:8px;font-size:0.8rem;cursor:pointer;transition:all 0.2s">
+                                            <i class='bx bx-x'></i> Hủy đơn
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

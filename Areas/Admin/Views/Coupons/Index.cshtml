@@ -1,0 +1,168 @@
+@model List<TamThaiTuSport.Models.Domain.Coupon>
+@{
+    ViewData["Title"] = "Quản lý mã giảm giá";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    int total = ViewBag.Total ?? 0;
+    int page = ViewBag.Page ?? 1;
+    int pageSize = ViewBag.PageSize ?? 20;
+}
+
+<div class="dash-header">
+    <div>
+        <h1 class="dash-title">Mã giảm giá</h1>
+        <p class="dash-subtitle">Tổng cộng <strong>@total</strong> mã</p>
+    </div>
+    <div class="dash-header-actions">
+        <a asp-area="Admin" asp-controller="Coupons" asp-action="Create" class="admin-btn primary">
+            <i class='bx bx-plus'></i> Tạo mã mới
+        </a>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="dash-filter-bar">
+    <form method="get" class="dash-filter-form">
+        <div class="dash-search-wrap">
+            <i class='bx bx-search'></i>
+            <input type="text" name="q" value="@ViewBag.SearchQuery" class="dash-search-input" placeholder="Tìm mã giảm giá..." />
+        </div>
+        <select name="isActive" class="admin-select" style="width:160px;">
+            <option value="">Tất cả trạng thái</option>
+            @if (ViewBag.IsActive?.ToString() == "True") {
+                <option value="true" selected>Đang hoạt động</option>
+            } else {
+                <option value="true">Đang hoạt động</option>
+            }
+            @if (ViewBag.IsActive?.ToString() == "False") {
+                <option value="false" selected>Đã vô hiệu</option>
+            } else {
+                <option value="false">Đã vô hiệu</option>
+            }
+        </select>
+        <button type="submit" class="admin-btn primary">Tìm kiếm</button>
+        <a href="?" class="admin-btn secondary">Xóa lọc</a>
+    </form>
+</div>
+
+<div class="dash-card" style="margin-top:1rem;">
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Mô tả</th>
+                    <th>Loại giảm</th>
+                    <th>Giá trị</th>
+                    <th>Đơn tối thiểu</th>
+                    <th>Đã dùng / Tối đa</th>
+                    <th>Hết hạn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    var isExpired = c.ExpiresAt.HasValue && c.ExpiresAt < DateTime.UtcNow;
+                    var isMaxed = c.MaxUsage.HasValue && c.UsedCount >= c.MaxUsage;
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <span style="font-family:monospace;font-weight:700;font-size:1rem;background:rgba(249,115,22,0.1);color:#f97316;padding:0.25rem 0.6rem;border-radius:6px;letter-spacing:0.05em;">@c.Code</span>
+                            </div>
+                        </td>
+                        <td class="text-muted" style="max-width:200px;">@(c.Description ?? "–")</td>
+                        <td>
+                            <span class="admin-badge @(c.IsPercent ? "info" : "warning")">
+                                @(c.IsPercent ? "%" : "₫") Cố định
+                            </span>
+                        </td>
+                        <td>
+                            <strong>
+                                @if (c.IsPercent)
+                                {
+                                    @($"{c.DiscountValue:0}%")
+                                    if (c.MaxDiscount.HasValue)
+                                    {
+                                        <small class="text-muted"> (tối đa @c.MaxDiscount.Value.ToString("N0")₫)</small>
+                                    }
+                                }
+                                else
+                                {
+                                    @($"{c.DiscountValue:N0}₫")
+                                }
+                            </strong>
+                        </td>
+                        <td class="text-muted">
+                            @(c.MinOrderAmount.HasValue ? c.MinOrderAmount.Value.ToString("N0") + "₫" : "Không giới hạn")
+                        </td>
+                        <td>
+                            @c.UsedCount / @(c.MaxUsage?.ToString() ?? "∞")
+                            @if (isMaxed) { <span class="admin-badge danger" style="margin-left:4px;">Hết lượt</span> }
+                        </td>
+                        <td>
+                            @if (c.ExpiresAt.HasValue)
+                            {
+                                <span class="@(isExpired ? "text-danger" : "text-muted")" style="font-size:0.82rem;">
+                                    @c.ExpiresAt.Value.ToLocalTime().ToString("dd/MM/yyyy")
+                                    @if (isExpired) { <span>(Hết hạn)</span> }
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Vĩnh viễn</span>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                string badgeClass = (!c.IsActive || isExpired || isMaxed) ? "danger" : "success";
+                                string badgeText = !c.IsActive ? "Vô hiệu" : isExpired ? "Hết hạn" : isMaxed ? "Hết lượt" : "Đang dùng";
+                            }
+                            <span class="admin-badge @badgeClass">@badgeText</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a asp-area="Admin" asp-controller="Coupons" asp-action="Edit"
+                                   asp-route-id="@c.Id" class="admin-btn-sm primary" title="Sửa">
+                                    <i class='bx bx-edit'></i>
+                                </a>
+                                <form asp-area="Admin" asp-controller="Coupons" asp-action="Toggle" method="post" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <button type="submit" class="admin-btn-sm @(c.IsActive ? "warning" : "success")"
+                                            title="@(c.IsActive ? "Vô hiệu hóa" : "Kích hoạt")">
+                                        <i class='bx @(c.IsActive ? "bx-pause" : "bx-play")'></i>
+                                    </button>
+                                </form>
+                                <form asp-area="Admin" asp-controller="Coupons" asp-action="Delete" method="post" style="display:inline"
+                                      onsubmit="return confirm('Xóa vĩnh viễn mã @c.Code?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <button type="submit" class="admin-btn-sm danger" title="Xóa">
+                                        <i class='bx bx-trash'></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="9" class="dash-empty">Chưa có mã giảm giá nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (total > pageSize)
+    {
+        int totalPages = (int)Math.Ceiling((double)total / pageSize);
+        <div class="dash-pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a href="?page=@i&q=@ViewBag.SearchQuery"
+                   class="dash-page-btn @(i == page ? "active" : "")">@i</a>
+            }
+        </div>
+    }
+</div>
